@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>二维码生成工具</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f4f6fb; color: #1e293b;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app { max-width: 1080px; margin: 0 auto; padding: 28px 20px 60px; }
+
+  .topbar { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    width: 46px; height: 46px; border-radius: 13px;
+    background: linear-gradient(135deg, #6366f1, #4338ca);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; box-shadow: 0 6px 16px rgba(79, 70, 229, .32);
+  }
+  .brand h1 { font-size: 19px; margin: 0; letter-spacing: -.2px; }
+
+  .tabs {
+    display: flex; gap: 6px; background: #e9edf6;
+    padding: 5px; border-radius: 13px; margin-bottom: 20px;
+  }
+  .tab {
+    flex: 1; border: 0; background: transparent; cursor: pointer;
+    padding: 10px 22px; border-radius: 9px; font-size: 14px; font-weight: 600;
+    color: #64748b; transition: all .18s; font-family: inherit;
+  }
+  .tab:hover { color: #334155; }
+  .tab.active { background: #fff; color: #4f46e5; box-shadow: 0 2px 8px rgba(30, 41, 59, .09); }
+
+  .panel { display: none; animation: fade .25s ease; }
+  .panel.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .card {
+    background: #fff; border: 1px solid #e8ecf3; border-radius: 16px;
+    padding: 22px; box-shadow: 0 2px 10px rgba(30, 41, 59, .04);
+  }
+  .card + .card { margin-top: 20px; }
+
+  .card-title {
+    font-size: 13px; font-weight: 700; color: #475569;
+    margin: 0 0 10px; letter-spacing: .3px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  textarea {
+    width: 100%; min-height: 132px; resize: vertical;
+    padding: 13px 15px; border-radius: 12px; border: 1px solid #e2e8f0;
+    font-size: 14px; font-family: inherit; line-height: 1.65; outline: none;
+    transition: border-color .15s, box-shadow .15s; color: #1e293b;
+  }
+  textarea::placeholder { color: #a3aec0; }
+  textarea:focus { border-color: #a5b4fc; box-shadow: 0 0 0 3px rgba(99, 102, 241, .12); }
+
+  .counter { text-align: right; font-size: 12px; color: #94a3b8; margin-top: 6px; }
+
+  .btn {
+    border: 1px solid #e2e8f0; background: #fff; color: #334155;
+    padding: 10px 18px; border-radius: 11px; cursor: pointer;
+    font-size: 14px; font-weight: 600; font-family: inherit;
+    transition: all .15s; white-space: nowrap;
+  }
+  .btn:hover { border-color: #c7d2fe; background: #f8faff; color: #4f46e5; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+  .btn.primary { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+  .btn.primary:hover { background: #4338ca; border-color: #4338ca; color: #fff; }
+  .btn.ghost { border-color: transparent; color: #94a3b8; }
+  .btn.ghost:hover { background: #fef2f2; color: #dc2626; }
+  .btn.tiny { padding: 6px 12px; font-size: 12.5px; border-radius: 8px; }
+
+  .preview-box {
+    width: 268px; height: 268px; margin: 0 auto;
+    border: 1px dashed #dde3ee; border-radius: 14px; background: #fafbff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .preview-box[hidden] { display: none; }
+  .empty-tip { color: #b6c0d0; font-size: 13.5px; text-align: center; line-height: 1.8; }
+
+  .hint { font-size: 12.5px; color: #94a3b8; margin: 12px 0 0; text-align: center; min-height: 18px; }
+
+  .drop-zone {
+    border: 2px dashed #cbd5e1; border-radius: 14px; padding: 42px 20px;
+    text-align: center; cursor: pointer; background: #fafbff; transition: all .2s;
+    margin-top: 18px;
+  }
+  .drop-zone:hover, .drop-zone.drag { border-color: #818cf8; background: #f4f6ff; }
+  .drop-zone.drag { transform: scale(1.005); }
+  .drop-icon { font-size: 34px; margin-bottom: 10px; }
+  .drop-zone p { margin: 5px 0; font-size: 14.5px; color: #475569; }
+  .drop-zone .muted { font-size: 12.5px; color: #94a3b8; }
+
+  .batch-toolbar { display: flex; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .muted { color: #94a3b8; font-size: 13px; }
+
+  .batch-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .batch-head h2 { font-size: 15px; margin: 0; }
+  .batch-head .count { color: #4f46e5; }
+  .batch-head > div { display: flex; gap: 10px; }
+
+  .qr-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px; max-height: 620px; overflow-y: auto; padding: 2px 6px 2px 2px;
+  }
+  .qr-grid::-webkit-scrollbar { width: 8px; }
+  .qr-grid::-webkit-scrollbar-thumb { background: #dbe2ec; border-radius: 4px; }
+  .qr-grid::-webkit-scrollbar-thumb:hover { background: #c3cddd; }
+  .qr-grid[hidden] { display: none; }
+
+  .qr-card {
+    border: 1px solid #eef1f6; border-radius: 13px; padding: 14px;
+    text-align: center; background: #fff; transition: all .18s;
+    cursor: pointer; user-select: none;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .qr-card:hover {
+    border-color: #c7d2fe; box-shadow: 0 6px 18px rgba(79, 70, 229, .12);
+    transform: translateY(-2px);
+  }
+  .qr-card canvas { width: 100%; height: auto; display: block; border-radius: 6px; }
+  .qr-card .txt {
+    font-size: 12px; color: #64748b; margin: 11px 0 9px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  }
+  .qr-card .err { font-size: 12px; color: #dc2626; margin: 11px 0 9px; }
+
+  @media (max-width: 520px) { .qr-grid { grid-template-columns: 1fr; } }
+
+  .lightbox {
+    position: fixed; inset: 0; z-index: 1000;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .lightbox[hidden] { display: none; }
+
+  .lb-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(15, 23, 42, .62); backdrop-filter: blur(3px);
+    animation: fade .2s ease;
+  }
+
+  .lb-panel {
+    position: relative; z-index: 1;
+    background: #fff; border-radius: 18px; padding: 20px 22px 18px;
+    display: flex; flex-direction: column; align-items: center; max-width: 100%;
+    box-shadow: 0 26px 64px rgba(15, 23, 42, .38);
+    animation: pop .22s cubic-bezier(.2, .9, .3, 1.2);
+  }
+  @keyframes pop { from { opacity: 0; transform: scale(.93); } to { opacity: 1; transform: none; } }
+
+  #lb-canvas {
+    display: block; width: min(420px, 62vh, 74vw); height: auto;
+    border-radius: 10px; background: #fff;
+    box-shadow: 0 2px 14px rgba(30, 41, 59, .08);
+  }
+
+  .lb-meta {
+    width: 100%; margin-top: 14px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .lb-text {
+    font-size: 12.5px; color: #64748b; line-height: 1.6;
+    max-width: min(420px, 74vw); max-height: 3.2em; overflow-y: auto;
+    word-break: break-all; text-align: center;
+  }
+  .lb-index {
+    font-size: 12.5px; font-weight: 700; color: #4f46e5;
+    background: #eef2ff; border-radius: 999px; padding: 3px 12px;
+  }
+  .lb-actions { margin-top: 14px; display: flex; gap: 10px; }
+
+  .lb-close {
+    position: absolute; top: 10px; right: 10px;
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 0; background: #f1f5f9; color: #64748b;
+    font-size: 15px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s; font-family: inherit;
+  }
+  .lb-close:hover { background: #fee2e2; color: #dc2626; }
+
+  .lb-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 1px solid #e2e8f0; background: #fff; color: #475569;
+    font-size: 24px; line-height: 1; cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center;
+    padding-bottom: 3px;
+    box-shadow: 0 6px 18px rgba(30, 41, 59, .16);
+    transition: all .15s; z-index: 2;
+  }
+  .lb-nav:hover { background: #eef2ff; color: #4f46e5; border-color: #c7d2fe; }
+  .lb-nav:active { transform: translateY(-50%) scale(.94); }
+  .lb-nav.prev { left: -20px; }
+  .lb-nav.next { right: -20px; }
+  .lb-nav[hidden] { display: none; }
+
+  @media (max-width: 640px) {
+    .lightbox { padding: 12px; }
+    .lb-panel { padding: 16px 16px 14px; }
+    .lb-nav { width: 38px; height: 38px; font-size: 21px; }
+    .lb-nav.prev { left: 6px; }
+    .lb-nav.next { right: 6px; }
+  }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 36px; transform: translate(-50%, 20px);
+    background: #1e293b; color: #fff; padding: 11px 22px; border-radius: 11px;
+    font-size: 13.5px; opacity: 0; pointer-events: none; transition: all .28s;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .22); z-index: 1200;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  .batch-options { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 14px; }
+  .checkbox-label {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 14px; font-weight: 600; color: #475569; cursor: pointer; user-select: none;
+  }
+  .checkbox-label input { width: 17px; height: 17px; accent-color: #4f46e5; cursor: pointer; }
+  .col-label { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600; color: #475569; }
+  .col-input {
+    width: 90px; padding: 7px 12px; border-radius: 9px;
+    border: 1px solid #e2e8f0; font-size: 14px; font-family: inherit;
+    color: #1e293b; outline: none; background: #fff;
+    text-transform: uppercase; letter-spacing: .5px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .col-input::placeholder { color: #a3aec0; text-transform: none; letter-spacing: normal; }
+  .col-input:focus { border-color: #a5b4fc; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm8-2h2v2h-2v-2zm4 0h2v2h-2v-2zm-2 2h2v2h-2v-2zm2 2h2v2h-2v-2zm-4 2h2v2h-2v-2zm4 0h2v2h-2v-2z"/>
+        </svg>
+      </div>
+      <h1>二维码生成工具</h1>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="single">单个生成</button>
+    <button class="tab" data-tab="batch">批量生成（Excel）</button>
+  </nav>
+
+  <main>
+    <section class="panel active" id="panel-single">
+      <div class="card">
+        <h2 class="card-title">二维码内容</h2>
+        <textarea id="single-input" placeholder="每行一个内容…"></textarea>
+        <div class="counter"><span id="char-count">0</span> 个二维码</div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">生成结果</h2>
+        <div class="preview-box" id="preview-box">
+          <div class="empty-tip">输入内容后<br>自动生成二维码</div>
+        </div>
+        <div class="qr-grid" id="single-grid" hidden></div>
+        <p class="hint" id="single-hint"></p>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-batch">
+      <div class="card">
+        <h2 class="card-title">导入设置</h2>
+        <div class="batch-options">
+          <label class="checkbox-label">
+            <input type="checkbox" id="has-header" checked>
+            <span>首行为标题</span>
+          </label>
+          <label class="col-label">
+            内容列：
+            <input type="text" id="content-col" class="col-input" value="A" placeholder="如 A、B、C" maxlength="3">
+          </label>
+        </div>
+
+        <div class="drop-zone" id="drop-zone">
+          <div class="drop-icon">📄</div>
+          <p><strong>点击选择文件</strong> 或拖拽到此处</p>
+          <p class="muted">支持 .xlsx / .xls / .csv</p>
+        </div>
+        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" hidden>
+        <div class="batch-toolbar">
+          <button class="btn" id="download-template">下载 Excel 模板</button>
+          <span class="muted">最多 500 条</span>
+          <span class="muted" id="batch-status" style="margin-left:auto"></span>
+        </div>
+      </div>
+
+      <div class="card" id="batch-result" hidden>
+        <div class="batch-head">
+          <h2>生成结果 <span class="count" id="batch-count"></span></h2>
+          <div>
+            <button class="btn primary" id="download-all">打包下载 ZIP</button>
+            <button class="btn ghost" id="clear-batch">清空</button>
+          </div>
+        </div>
+        <div class="qr-grid" id="qr-grid"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="lightbox" id="lightbox" hidden>
+  <div class="lb-backdrop" id="lb-backdrop"></div>
+  <div class="lb-panel">
+    <button class="lb-close" id="lb-close" title="关闭 (Esc)">✕</button>
+    <button class="lb-nav prev" id="lb-prev" title="上一个 (←)">‹</button>
+    <button class="lb-nav next" id="lb-next" title="下一个 (→)">›</button>
+    <canvas id="lb-canvas"></canvas>
+    <div class="lb-meta">
+      <div class="lb-text" id="lb-text"></div>
+      <div class="lb-index" id="lb-index"></div>
+    </div>
+    <div class="lb-actions">
+      <button class="btn primary" id="lb-download">下载 PNG</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+ * QR 编码器（内部实现保持不变）
+ * ============================================================ */
+const QR = (() => {
+  const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
+  (() => {
+    let x = 1;
+    for (let i = 0; i < 255; i++) {
+      EXP[i] = x; LOG[x] = i;
+      x <<= 1; if (x & 0x100) x ^= 0x11d;
+    }
+    for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+  })();
+  const gmul = (a, b) => (a === 0 || b === 0) ? 0 : EXP[LOG[a] + LOG[b]];
+
+  const genCache = {};
+  function rsGenPoly(deg) {
+    if (genCache[deg]) return genCache[deg];
+    let poly = [1];
+    for (let i = 0; i < deg; i++) {
+      const next = new Array(poly.length + 1).fill(0);
+      for (let j = 0; j < poly.length; j++) {
+        next[j] ^= poly[j];
+        next[j + 1] ^= gmul(poly[j], EXP[i]);
+      }
+      poly = next;
+    }
+    return (genCache[deg] = poly);
+  }
+
+  function rsEncode(data, ecLen) {
+    const gen = rsGenPoly(ecLen);
+    const res = new Uint8Array(data.length + ecLen);
+    res.set(data);
+    for (let i = 0; i < data.length; i++) {
+      const coef = res[i];
+      if (!coef) continue;
+      for (let j = 0; j < gen.length; j++) res[i + j] ^= gmul(gen[j], coef);
+    }
+    return res.subarray(data.length);
+  }
+
+  const EC_LEVELS = ['L', 'M', 'Q', 'H'];
+  const RS_BLOCK_TABLE = [
+    [1,26,19],[1,26,16],[1,26,13],[1,26,9],
+    [1,44,34],[1,44,28],[1,44,22],[1,44,16],
+    [1,70,55],[1,70,44],[2,35,17],[2,35,13],
+    [1,100,80],[2,50,32],[2,50,24],[4,25,9],
+    [1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],
+    [2,86,68],[4,43,27],[4,43,19],[4,43,15],
+    [2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],
+    [2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],
+    [2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],
+    [2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16]
+  ];
+
+  function getBlocks(version, ecLevel) {
+    const entry = RS_BLOCK_TABLE[(version - 1) * 4 + EC_LEVELS.indexOf(ecLevel)];
+    const groups = [];
+    for (let i = 0; i < entry.length; i += 3)
+      groups.push({ count: entry[i], total: entry[i + 1], data: entry[i + 2] });
+    return groups;
+  }
+  const getCap = (v, ec) => getBlocks(v, ec).reduce((s, g) => s + g.count * g.data, 0);
+
+  function utf8Bytes(str) {
+    const out = [];
+    for (let i = 0; i < str.length; i++) {
+      const c = str.charCodeAt(i);
+      if (c < 0x80) out.push(c);
+      else if (c < 0x800) out.push(0xc0 | (c >> 6), 0x80 | (c & 63));
+      else if (c >= 0xd800 && c < 0xdc00 && i + 1 < str.length) {
+        const c2 = str.charCodeAt(++i);
+        const cp = 0x10000 + ((c - 0xd800) << 10) + (c2 - 0xdc00);
+        out.push(0xf0 | (cp >> 18), 0x80 | ((cp >> 12) & 63),
+                 0x80 | ((cp >> 6) & 63), 0x80 | (cp & 63));
+      } else out.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+    }
+    return out;
+  }
+
+  function buildCodewords(bytes, version, ecLevel) {
+    const cap = getCap(version, ecLevel), maxBits = cap * 8;
+    const bits = [];
+    const push = (v, len) => { for (let i = len - 1; i >= 0; i--) bits.push((v >>> i) & 1); };
+    push(4, 4);
+    push(bytes.length, version < 10 ? 8 : 16);
+    bytes.forEach(b => push(b, 8));
+    for (let i = 0; i < 4 && bits.length < maxBits; i++) bits.push(0);
+    while (bits.length % 8 !== 0) bits.push(0);
+    const cw = [];
+    for (let i = 0; i < bits.length; i += 8) {
+      let v = 0;
+      for (let j = 0; j < 8; j++) v = (v << 1) | bits[i + j];
+      cw.push(v);
+    }
+    const pad = [0xec, 0x11];
+    let pi = 0;
+    while (cw.length < cap) cw.push(pad[pi++ % 2]);
+    return cw;
+  }
+
+  function interleave(cw, version, ecLevel) {
+    const groups = getBlocks(version, ecLevel);
+    const dataBlocks = [], ecBlocks = [];
+    let offset = 0;
+    for (const g of groups) {
+      const ecLen = g.total - g.data;
+      for (let i = 0; i < g.count; i++) {
+        const d = cw.slice(offset, offset + g.data);
+        offset += g.data;
+        dataBlocks.push(d);
+        ecBlocks.push(rsEncode(d, ecLen));
+      }
+    }
+    const result = [];
+    const maxData = Math.max(...dataBlocks.map(b => b.length));
+    for (let i = 0; i < maxData; i++)
+      for (const b of dataBlocks) if (i < b.length) result.push(b[i]);
+    const maxEc = Math.max(...ecBlocks.map(b => b.length));
+    for (let i = 0; i < maxEc; i++)
+      for (const b of ecBlocks) if (i < b.length) result.push(b[i]);
+    return result;
+  }
+
+  const ALIGN_POS = {
+    1: [], 2: [6,18], 3: [6,22], 4: [6,26], 5: [6,30],
+    6: [6,34], 7: [6,22,38], 8: [6,24,42], 9: [6,26,46], 10: [6,28,50]
+  };
+  const EC_BITS = { L: 1, M: 0, Q: 3, H: 2 };
+
+  function formatBits(ecLevel, mask) {
+    const data = (EC_BITS[ecLevel] << 3) | mask;
+    let bch = data << 10;
+    for (let i = 14; i >= 10; i--) if ((bch >> i) & 1) bch ^= 0x537 << (i - 10);
+    return (((data << 10) | (bch & 0x3ff)) ^ 0x5412) & 0x7fff;
+  }
+  function versionBits(version) {
+    let bch = version << 12;
+    for (let i = 17; i >= 12; i--) if ((bch >> i) & 1) bch ^= 0x1f25 << (i - 12);
+    return ((version << 12) | (bch & 0xfff)) & 0x3ffff;
+  }
+
+  function buildBase(version) {
+    const size = version * 4 + 17;
+    const m = [], res = [];
+    for (let i = 0; i < size; i++) {
+      m.push(new Array(size).fill(0));
+      res.push(new Array(size).fill(false));
+    }
+    const set = (r, c, v) => { m[r][c] = v; res[r][c] = true; };
+
+    [[0, 0], [0, size - 7], [size - 7, 0]].forEach(([fr, fc]) => {
+      for (let i = -1; i <= 7; i++) for (let j = -1; j <= 7; j++) {
+        const r = fr + i, c = fc + j;
+        if (r < 0 || r >= size || c < 0 || c >= size) continue;
+        const ring = (i >= 0 && i <= 6 && (j === 0 || j === 6)) ||
+                     (j >= 0 && j <= 6 && (i === 0 || i === 6));
+        const core = i >= 2 && i <= 4 && j >= 2 && j <= 4;
+        set(r, c, (ring || core) ? 1 : 0);
+      }
+    });
+
+    for (let i = 8; i < size - 8; i++) {
+      set(6, i, i % 2 === 0 ? 1 : 0);
+      set(i, 6, i % 2 === 0 ? 1 : 0);
+    }
+
+    for (const r of ALIGN_POS[version]) for (const c of ALIGN_POS[version]) {
+      const near = (r <= 8 && c <= 8) || (r <= 8 && c >= size - 9) || (r >= size - 9 && c <= 8);
+      if (near) continue;
+      for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++)
+        set(r + i, c + j, Math.max(Math.abs(i), Math.abs(j)) !== 1 ? 1 : 0);
+    }
+
+    set(size - 8, 8, 1);
+    for (let i = 0; i < 9; i++) { res[8][i] = true; res[i][8] = true; }
+    for (let i = 0; i < 8; i++) { res[8][size - 1 - i] = true; res[size - 1 - i][8] = true; }
+
+    if (version >= 7) {
+      const vb = versionBits(version);
+      for (let i = 0; i < 18; i++) {
+        const bit = (vb >> i) & 1;
+        const r = Math.floor(i / 3), c = i % 3;
+        set(r, size - 11 + c, bit);
+        set(size - 11 + c, r, bit);
+      }
+    }
+    return { m, res, size };
+  }
+
+  function placeData(m, res, codewords, size) {
+    const bits = [];
+    for (const cw of codewords)
+      for (let i = 7; i >= 0; i--) bits.push((cw >> i) & 1);
+    let idx = 0, upward = true;
+    for (let col = size - 1; col > 0; col -= 2) {
+      if (col === 6) col--;
+      for (let i = 0; i < size; i++) {
+        const row = upward ? size - 1 - i : i;
+        for (let j = 0; j < 2; j++) {
+          const c = col - j;
+          if (res[row][c]) continue;
+          m[row][c] = idx < bits.length ? bits[idx++] : 0;
+        }
+      }
+      upward = !upward;
+    }
+  }
+
+  const MASK_FN = [
+    (r, c) => (r + c) % 2 === 0,
+    r => r % 2 === 0,
+    (r, c) => c % 3 === 0,
+    (r, c) => (r + c) % 3 === 0,
+    (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0,
+    (r, c) => ((r * c) % 2) + ((r * c) % 3) === 0,
+    (r, c) => (((r * c) % 2) + ((r * c) % 3)) % 2 === 0,
+    (r, c) => (((r + c) % 2) + ((r * c) % 3)) % 2 === 0
+  ];
+  const PAT_A = [1,0,1,1,1,0,1,0,0,0,0];
+  const PAT_B = [0,0,0,0,1,0,1,1,1,0,1];
+
+  function penalty(m) {
+    const size = m.length;
+    let p = 0;
+    for (let i = 0; i < size; i++) {
+      let run = 1;
+      for (let j = 1; j < size; j++) {
+        if (m[i][j] === m[i][j - 1]) run++;
+        else { if (run >= 5) p += 3 + run - 5; run = 1; }
+      }
+      if (run >= 5) p += 3 + run - 5;
+      run = 1;
+      for (let j = 1; j < size; j++) {
+        if (m[j][i] === m[j - 1][i]) run++;
+        else { if (run >= 5) p += 3 + run - 5; run = 1; }
+      }
+      if (run >= 5) p += 3 + run - 5;
+    }
+    for (let i = 0; i < size - 1; i++)
+      for (let j = 0; j < size - 1; j++) {
+        const v = m[i][j];
+        if (v === m[i][j + 1] && v === m[i + 1][j] && v === m[i + 1][j + 1]) p += 3;
+      }
+    for (let i = 0; i < size; i++)
+      for (let j = 0; j <= size - 11; j++) {
+        let okA = true, okB = true, okC = true, okD = true;
+        for (let k = 0; k < 11; k++) {
+          if (m[i][j + k] !== PAT_A[k]) okA = false;
+          if (m[i][j + k] !== PAT_B[k]) okB = false;
+          if (m[j + k][i] !== PAT_A[k]) okC = false;
+          if (m[j + k][i] !== PAT_B[k]) okD = false;
+        }
+        if (okA) p += 40; if (okB) p += 40;
+        if (okC) p += 40; if (okD) p += 40;
+      }
+    let dark = 0;
+    for (let i = 0; i < size; i++)
+      for (let j = 0; j < size; j++) if (m[i][j]) dark++;
+    p += Math.floor(Math.abs(dark * 100 / (size * size) - 50) / 5) * 10;
+    return p;
+  }
+
+  function writeFormat(m, size, ecLevel, mask) {
+    const bits = formatBits(ecLevel, mask);
+    for (let i = 0; i < 15; i++) {
+      const v = (bits >> i) & 1;
+      if (i < 6) m[i][8] = v;
+      else if (i < 8) m[i + 1][8] = v;
+      else m[size - 15 + i][8] = v;
+      if (i < 8) m[8][size - i - 1] = v;
+      else if (i < 9) m[8][15 - i] = v;
+      else m[8][14 - i] = v;
+    }
+  }
+
+  function generate(text, ecLevel = 'Q') {
+    const bytes = utf8Bytes(text);
+    let version = 0;
+    for (let v = 1; v <= 10; v++) {
+      const ccBits = v < 10 ? 8 : 16;
+      if (4 + ccBits + bytes.length * 8 <= getCap(v, ecLevel) * 8) { version = v; break; }
+    }
+    if (!version) throw new Error('内容过长，超出版本 10 的容量上限（约 200 字节）');
+
+    const finalCW = interleave(buildCodewords(bytes, version, ecLevel), version, ecLevel);
+    const { m, res, size } = buildBase(version);
+    placeData(m, res, finalCW, size);
+
+    let best = null, bestScore = Infinity;
+    for (let mask = 0; mask < 8; mask++) {
+      const cand = m.map(row => row.slice());
+      const fn = MASK_FN[mask];
+      for (let r = 0; r < size; r++)
+        for (let c = 0; c < size; c++)
+          if (!res[r][c] && fn(r, c)) cand[r][c] ^= 1;
+      writeFormat(cand, size, ecLevel, mask);
+      const score = penalty(cand);
+      if (score < bestScore) { bestScore = score; best = cand; }
+    }
+    return best;
+  }
+
+  return { generate };
+})();
+
+
+/* ============================================================
+ * MiniXLSX：解析 .xlsx 为二维数组
+ * ============================================================ */
+const MiniXLSX = (() => {
+  function findEOCD(view, len) {
+    const min = Math.max(0, len - 65558);
+    for (let i = len - 22; i >= min; i--)
+      if (view.getUint32(i, true) === 0x06054b50) return i;
+    return -1;
+  }
+
+  function readZipEntries(buffer) {
+    const view = new DataView(buffer), u8 = new Uint8Array(buffer);
+    const eocd = findEOCD(view, buffer.byteLength);
+    if (eocd < 0) throw new Error('不是有效的 xlsx 文件（未找到 ZIP 结构）');
+    const count = view.getUint16(eocd + 10, true);
+    let p = view.getUint32(eocd + 16, true);
+    const entries = {};
+    for (let i = 0; i < count; i++) {
+      if (p + 46 > buffer.byteLength) break;
+      if (view.getUint32(p, true) !== 0x02014b50) break;
+      const method     = view.getUint16(p + 10, true);
+      const compSize   = view.getUint32(p + 20, true);
+      const nameLen    = view.getUint16(p + 28, true);
+      const extraLen   = view.getUint16(p + 30, true);
+      const commentLen = view.getUint16(p + 32, true);
+      const localOff   = view.getUint32(p + 42, true);
+      const name = new TextDecoder('utf-8').decode(u8.subarray(p + 46, p + 46 + nameLen));
+      const lNameLen  = view.getUint16(localOff + 26, true);
+      const lExtraLen = view.getUint16(localOff + 28, true);
+      entries[name] = {
+        method, compSize,
+        dataStart: localOff + 30 + lNameLen + lExtraLen
+      };
+      p += 46 + nameLen + extraLen + commentLen;
+    }
+    return entries;
+  }
+
+  async function extract(u8, entry) {
+    const raw = u8.subarray(entry.dataStart, entry.dataStart + entry.compSize);
+    if (entry.method === 0) return raw;
+    if (entry.method === 8) {
+      if (typeof DecompressionStream === 'undefined')
+        throw new Error('当前浏览器不支持解压，请改用 CSV 文件');
+      const ds = new DecompressionStream('deflate-raw');
+      const stream = new Blob([raw]).stream().pipeThrough(ds);
+      return new Uint8Array(await new Response(stream).arrayBuffer());
+    }
+    throw new Error('不支持的压缩方式：' + entry.method);
+  }
+
+  function parseSharedStrings(xml) {
+    const doc = new DOMParser().parseFromString(xml, 'application/xml');
+    const sis = doc.getElementsByTagName('si'), out = [];
+    for (let i = 0; i < sis.length; i++) {
+      const ts = sis[i].getElementsByTagName('t');
+      let s = '';
+      for (let j = 0; j < ts.length; j++) s += ts[j].textContent;
+      out.push(s);
+    }
+    return out;
+  }
+
+  function colIndex(ref) {
+    const m = /^([A-Z]+)/.exec(ref || '');
+    if (!m) return -1;
+    let n = 0;
+    for (const ch of m[1]) n = n * 26 + (ch.charCodeAt(0) - 64);
+    return n - 1;
+  }
+
+  function parseSheet(xml, shared) {
+    const doc = new DOMParser().parseFromString(xml, 'application/xml');
+    const rows = doc.getElementsByTagName('row'), out = [];
+    for (let i = 0; i < rows.length; i++) {
+      const cells = rows[i].getElementsByTagName('c'), arr = [];
+      let auto = 0;
+      for (let j = 0; j < cells.length; j++) {
+        const c = cells[j];
+        let ci = c.getAttribute('r') ? colIndex(c.getAttribute('r')) : auto;
+        if (ci < 0) ci = auto;
+        auto = ci + 1;
+        const t = c.getAttribute('t');
+        let val = '';
+        if (t === 's') {
+          const v = c.getElementsByTagName('v')[0];
+          if (v) val = shared[parseInt(v.textContent, 10)] || '';
+        } else if (t === 'inlineStr') {
+          const ts = c.getElementsByTagName('t');
+          for (let k = 0; k < ts.length; k++) val += ts[k].textContent;
+        } else {
+          const v = c.getElementsByTagName('v')[0];
+          if (v) val = v.textContent;
+        }
+        while (arr.length < ci) arr.push('');
+        arr[ci] = val;
+      }
+      out.push(arr);
+    }
+    return out;
+  }
+
+  async function parse(file) {
+    const buffer = await file.arrayBuffer();
+    const u8 = new Uint8Array(buffer);
+    const entries = readZipEntries(buffer);
+
+    let shared = [];
+    if (entries['xl/sharedStrings.xml']) {
+      const data = await extract(u8, entries['xl/sharedStrings.xml']);
+      shared = parseSharedStrings(new TextDecoder('utf-8').decode(data));
+    }
+
+    const sheetNames = Object.keys(entries)
+      .filter(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n))
+      .sort((a, b) => parseInt(a.match(/(\d+)/)[1], 10) - parseInt(b.match(/(\d+)/)[1], 10));
+    if (!sheetNames.length) throw new Error('未找到工作表');
+
+    const data = await extract(u8, entries[sheetNames[0]]);
+    return parseSheet(new TextDecoder('utf-8').decode(data), shared);
+  }
+
+  return { parse };
+})();
+
+
+/* ============================================================
+ * 工具函数
+ * ============================================================ */
+function parseCSV(text) {
+  text = text.replace(/^\uFEFF/, '');
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else field += ch;
+    } else {
+      if (ch === '"') inQuotes = true;
+      else if (ch === ',') { row.push(field); field = ''; }
+      else if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else if (ch !== '\r') field += ch;
+    }
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+
+function crc32(buf) {
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < buf.length; i++)
+    crc = (crc >>> 8) ^ CRC_TABLE[(crc ^ buf[i]) & 0xFF];
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+function makeZip(files) {
+  const enc = new TextEncoder();
+  const parts = [], central = [];
+  let offset = 0;
+
+  for (const f of files) {
+    const nameBytes = enc.encode(f.name);
+    const crc = crc32(f.data), size = f.data.length;
+
+    const local = new Uint8Array(30 + nameBytes.length);
+    const lv = new DataView(local.buffer);
+    lv.setUint32(0, 0x04034b50, true);
+    lv.setUint16(4, 20, true);
+    lv.setUint16(6, 0x0800, true);
+    lv.setUint32(14, crc, true);
+    lv.setUint32(18, size, true);
+    lv.setUint32(22, size, true);
+    lv.setUint16(26, nameBytes.length, true);
+    local.set(nameBytes, 30);
+    parts.push(local, f.data);
+
+    const cd = new Uint8Array(46 + nameBytes.length);
+    const cv = new DataView(cd.buffer);
+    cv.setUint32(0, 0x02014b50, true);
+    cv.setUint16(4, 20, true);
+    cv.setUint16(6, 20, true);
+    cv.setUint16(8, 0x0800, true);
+    cv.setUint32(16, crc, true);
+    cv.setUint32(20, size, true);
+    cv.setUint32(24, size, true);
+    cv.setUint16(28, nameBytes.length, true);
+    cv.setUint32(42, offset, true);
+    cd.set(nameBytes, 46);
+    central.push(cd);
+
+    offset += local.length + size;
+  }
+
+  const cdSize = central.reduce((s, c) => s + c.length, 0);
+  const eocd = new Uint8Array(22);
+  const ev = new DataView(eocd.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(8, files.length, true);
+  ev.setUint16(10, files.length, true);
+  ev.setUint32(12, cdSize, true);
+  ev.setUint32(16, offset, true);
+
+  return new Blob([...parts, ...central, eocd], { type: 'application/zip' });
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 1900);
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function safeName(str, fallback) {
+  const s = String(str || '').replace(/[\\/:*?"<>|\r\n\t]/g, '_').trim().slice(0, 40);
+  return s || fallback;
+}
+
+function drawQR(canvas, matrix, logicalSize, quiet = 4) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const px = Math.max(64, Math.round(logicalSize * dpr));
+  canvas.width = canvas.height = px;
+  const n = matrix.length, total = n + quiet * 2, unit = px / total;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, px, px);
+  ctx.fillStyle = '#111827';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+    if (!matrix[r][c]) continue;
+    const x1 = Math.round((c + quiet) * unit);
+    const y1 = Math.round((r + quiet) * unit);
+    const x2 = Math.round((c + quiet + 1) * unit);
+    const y2 = Math.round((r + quiet + 1) * unit);
+    ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+  }
+}
+
+function colLetterToIndex(s) {
+  s = String(s || '').trim().toUpperCase();
+  if (!/^[A-Z]+$/.test(s)) return -1;
+  let n = 0;
+  for (const ch of s) n = n * 26 + (ch.charCodeAt(0) - 64);
+  return n - 1;
+}
+
+function indexToColLetter(i) {
+  let s = '';
+  i += 1;
+  while (i > 0) {
+    const m = (i - 1) % 26;
+    s = String.fromCharCode(65 + m) + s;
+    i = Math.floor((i - 1) / 26);
+  }
+  return s;
+}
+
+function downloadPNG(canvas, name) {
+  canvas.toBlob(blob => downloadBlob(blob, name + '.png'), 'image/png');
+}
+
+
+/* ============================================================
+ * 常量与状态
+ * ============================================================ */
+const EC_LEVEL = 'Q';
+const EXPORT_SIZE = 512;
+const MAX_ITEMS = 500;
+
+let singleItems = [];
+let batchItems = [];
+let lastRows = null;
+let renderTimer = null;
+let lbItems = [];
+let lbCurrent = -1;
+
+const $ = id => document.getElementById(id);
+
+
+/* ============================================================
+ * 通用：生成一张二维码卡片
+ * 失败时返回"内容过长"卡片，且不加入 items
+ * ============================================================ */
+function buildCard(text, name, items) {
+  const card = document.createElement('div');
+  card.className = 'qr-card';
+
+  let matrix;
+  try {
+    matrix = QR.generate(text, EC_LEVEL);
+  } catch {
+    card.innerHTML = '<div class="err">内容过长</div>' +
+      `<div class="txt" title="${text.replace(/"/g, '&quot;')}">${text}</div>`;
+    return card;
+  }
+
+  const cv = document.createElement('canvas');
+  drawQR(cv, matrix, EXPORT_SIZE);
+  card.appendChild(cv);
+
+  const txt = document.createElement('div');
+  txt.className = 'txt';
+  txt.title = text;
+  txt.textContent = text;
+  card.appendChild(txt);
+
+  const btn = document.createElement('button');
+  btn.className = 'btn tiny';
+  btn.textContent = '下载';
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    downloadPNG(cv, name);
+  });
+  card.appendChild(btn);
+
+  const idx = items.length;
+  items.push({ canvas: cv, matrix, text, name });
+  card.title = '双击查看大图';
+  card.addEventListener('dblclick', () => openLightbox(idx, items));
+
+  return card;
+}
+
+
+/* ============================================================
+ * 顶部 Tab 切换
+ * ============================================================ */
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    $('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+
+/* ============================================================
+ * 单页：多行输入 → 每行一个二维码
+ * ============================================================ */
+const singleInput = $('single-input');
+const singleGrid  = $('single-grid');
+const previewBox  = $('preview-box');
+const singleHint  = $('single-hint');
+
+function renderSingle() {
+  const texts = singleInput.value.split('\n').map(l => l.trim()).filter(Boolean);
+  $('char-count').textContent = texts.length;
+
+  if (!texts.length) {
+    previewBox.hidden = false;
+    singleGrid.hidden = true;
+    singleGrid.innerHTML = '';
+    singleItems = [];
+    singleHint.textContent = '';
+    return;
+  }
+
+  previewBox.hidden = true;
+  singleGrid.hidden = false;
+  singleGrid.innerHTML = '';
+  singleItems = [];
+
+  texts.forEach(text => {
+    const name = safeName(text, 'qrcode_' + (singleItems.length + 1));
+    singleGrid.appendChild(buildCard(text, name, singleItems));
+  });
+
+  singleHint.textContent = `共 ${texts.length} 个二维码`;
+}
+
+singleInput.addEventListener('input', () => {
+  clearTimeout(renderTimer);
+  renderTimer = setTimeout(renderSingle, 120);
+});
+
+
+/* ============================================================
+ * 批量：解析 Excel / CSV
+ * ============================================================ */
+const dropZone     = $('drop-zone');
+const fileInput    = $('file-input');
+const qrGrid       = $('qr-grid');
+const batchResult  = $('batch-result');
+const batchCount   = $('batch-count');
+const batchStatus  = $('batch-status');
+const hasHeaderEl  = $('has-header');
+const contentColEl = $('content-col');
+
+hasHeaderEl.addEventListener('change', rebuildFromRows);
+contentColEl.addEventListener('change', rebuildFromRows);
+contentColEl.addEventListener('input', () => {
+  const v = contentColEl.value.toUpperCase();
+  if (v !== contentColEl.value) contentColEl.value = v;
+});
+
+function rebuildFromRows() {
+  if (!lastRows) return;
+  try {
+    buildBatch(lastRows);
+  } catch (err) {
+    closeLightbox();
+    qrGrid.innerHTML = '';
+    batchItems = [];
+    batchResult.hidden = true;
+    toast(err.message || '无法生成，请检查数据');
+  }
+}
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+});
+
+fileInput.addEventListener('change', () => {
+  const file = fileInput.files[0];
+  if (file) handleFile(file);
+  fileInput.value = '';
+});
+
+async function handleFile(file) {
+  const name = file.name.toLowerCase();
+  batchStatus.textContent = '解析中…';
+  try {
+    let rows;
+    if (name.endsWith('.csv')) rows = parseCSV(await file.text());
+    else if (name.endsWith('.xlsx') || name.endsWith('.xls')) rows = await MiniXLSX.parse(file);
+    else throw new Error('不支持的文件格式，请使用 .xlsx / .xls / .csv');
+
+    rows = rows.filter(r => r && r.some(v => String(v ?? '').trim() !== ''));
+    if (!rows.length) throw new Error('文件中没有可用的数据');
+
+    lastRows = rows;
+    const maxCols = Math.max(1, ...rows.map(r => r.length));
+    buildBatch(rows);
+    batchStatus.textContent =
+      `已解析 ${file.name} · 共 ${maxCols} 列（${indexToColLetter(0)}~${indexToColLetter(maxCols - 1)}）`;
+  } catch (err) {
+    console.error(err);
+    batchStatus.textContent = '';
+    toast(err.message || '解析失败');
+  }
+}
+
+function buildBatch(rows) {
+  closeLightbox();
+
+  const contentCol = colLetterToIndex(contentColEl.value);
+  if (contentCol < 0) throw new Error('内容列填写有误，请输入列字母（如 A、B、C）');
+
+  const hasHeader = hasHeaderEl.checked;
+  if (hasHeader && rows.length < 2)
+    throw new Error('数据不足：勾选了“首行为标题”，需从第 2 行开始提供数据');
+
+  const dataRows = hasHeader ? rows.slice(1) : rows;
+  const limit = Math.min(dataRows.length, MAX_ITEMS);
+
+  const valid = [];
+  for (let i = 0; i < limit; i++) {
+    const text = String((dataRows[i] || [])[contentCol] ?? '').trim();
+    if (text) valid.push(text);
+  }
+  if (!valid.length) throw new Error('没有可生成的内容，请检查数据');
+
+  qrGrid.innerHTML = '';
+  batchItems = [];
+
+  const padLen = Math.max(3, String(valid.length).length);
+  valid.forEach((text, i) => {
+    const fname = String(i + 1).padStart(padLen, '0');
+    qrGrid.appendChild(buildCard(text, fname, batchItems));
+  });
+
+  batchCount.textContent = `(${batchItems.length} 个)`;
+  batchResult.hidden = false;
+
+  if (dataRows.length > MAX_ITEMS)
+    toast(`数据超过 ${MAX_ITEMS} 条，仅生成前 ${MAX_ITEMS} 条`);
+}
+
+$('download-all').addEventListener('click', async () => {
+  if (!batchItems.length) return;
+  const btn = $('download-all');
+  btn.disabled = true;
+  btn.textContent = '打包中…';
+  try {
+    const files = [], used = new Set();
+    for (const it of batchItems) {
+      const blob = await new Promise(r => it.canvas.toBlob(r, 'image/png'));
+      const data = new Uint8Array(await blob.arrayBuffer());
+      let fname = it.name, n = 2;
+      while (used.has(fname)) fname = it.name + '_' + (n++);
+      used.add(fname);
+      files.push({ name: fname + '.png', data });
+    }
+    downloadBlob(makeZip(files), 'qrcodes_' + Date.now() + '.zip');
+    toast(`已打包 ${files.length} 个二维码`);
+  } catch (e) {
+    console.error(e);
+    toast('打包失败：' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '打包下载 ZIP';
+  }
+});
+
+$('clear-batch').addEventListener('click', () => {
+  closeLightbox();
+  qrGrid.innerHTML = '';
+  batchItems = [];
+  batchResult.hidden = true;
+  batchStatus.textContent = '';
+  lastRows = null;
+  contentColEl.value = 'A';
+});
+
+$('download-template').addEventListener('click', () => {
+  const csv = '\uFEFF内容\nhttps://www.example.com\nHello World\n13800138000\n';
+  downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), '二维码批量导入模板.csv');
+  toast('模板已下载，可用 Excel 打开填写');
+});
+
+
+/* ============================================================
+ * 大图预览弹层
+ * ============================================================ */
+const lightbox = $('lightbox');
+
+function openLightbox(idx, items) {
+  lbItems = items || batchItems;
+  if (idx < 0 || idx >= lbItems.length) return;
+  lightbox.hidden = false;
+  renderLightbox(idx);
+}
+
+function closeLightbox() {
+  lightbox.hidden = true;
+  lbCurrent = -1;
+  lbItems = [];
+}
+
+function renderLightbox(idx) {
+  const total = lbItems.length;
+  if (!total) return closeLightbox();
+  lbCurrent = ((idx % total) + total) % total;
+  const it = lbItems[lbCurrent];
+
+  drawQR($('lb-canvas'), it.matrix, 480);
+  $('lb-text').textContent = it.text;
+  $('lb-text').title = it.text;
+  $('lb-index').textContent = (lbCurrent + 1) + ' / ' + total;
+
+  const multiple = total > 1;
+  $('lb-prev').hidden = !multiple;
+  $('lb-next').hidden = !multiple;
+}
+
+function stepLightbox(delta) {
+  if (lbCurrent >= 0) renderLightbox(lbCurrent + delta);
+}
+
+$('lb-prev').addEventListener('click', () => stepLightbox(-1));
+$('lb-next').addEventListener('click', () => stepLightbox(1));
+$('lb-close').addEventListener('click', closeLightbox);
+$('lb-backdrop').addEventListener('click', closeLightbox);
+
+$('lb-download').addEventListener('click', () => {
+  if (lbCurrent < 0) return;
+  const it = lbItems[lbCurrent];
+  const tmp = document.createElement('canvas');
+  drawQR(tmp, it.matrix, 900);
+  downloadPNG(tmp, it.name);
+  toast('已下载 PNG');
+});
+
+document.addEventListener('keydown', e => {
+  if (lightbox.hidden) return;
+  if (e.key === 'Escape') closeLightbox();
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); stepLightbox(-1); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); stepLightbox(1); }
+});
+
+(() => {
+  let startX = 0, startY = 0, tracking = false;
+  lightbox.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tracking = true;
+  }, { passive: true });
+  lightbox.addEventListener('touchend', e => {
+    if (!tracking) return;
+    tracking = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX, dy = t.clientY - startY;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy))
+      stepLightbox(dx < 0 ? 1 : -1);
+  }, { passive: true });
+})();
+
+
+/* 初始化 */
+renderSingle();
+</script>
+</body>
+</html>
