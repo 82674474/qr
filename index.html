@@ -3,364 +3,502 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>二维码生成工具</title>
+<title>二维码生成器</title>
 <style>
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
                  "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-    background: #f4f6fb; color: #1e293b;
+    background: #eef1f8;
+    color: #1e293b;
+    min-height: 100vh;
+    padding: 36px 20px 70px;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
 
-  .app { max-width: 1080px; margin: 0 auto; padding: 28px 20px 60px; }
+  .app { max-width: 1080px; margin: 0 auto; }
 
-  .topbar { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; }
-  .brand { display: flex; align-items: center; gap: 14px; }
-  .logo {
-    width: 46px; height: 46px; border-radius: 13px;
-    background: linear-gradient(135deg, #6366f1, #4338ca);
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; box-shadow: 0 6px 16px rgba(79, 70, 229, .32);
+  header { text-align: center; margin-bottom: 26px; }
+  header h1 {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.6px;
+    background: linear-gradient(100deg, #4f46e5, #7c3aed 60%, #a855f7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
-  .brand h1 { font-size: 19px; margin: 0; letter-spacing: -.2px; }
+  header .sub {
+    color: #64748b;
+    font-size: 13.5px;
+    margin-top: 8px;
+  }
 
   .tabs {
-    display: flex; gap: 6px; background: #e9edf6;
-    padding: 5px; border-radius: 13px; margin-bottom: 20px;
+    display: flex;
+    gap: 6px;
+    background: #fff;
+    padding: 6px;
+    border-radius: 15px;
+    margin: 0 auto 18px;
+    width: fit-content;
+    box-shadow: 0 4px 22px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(15, 23, 42, 0.04);
   }
   .tab {
-    flex: 1; border: 0; background: transparent; cursor: pointer;
-    padding: 10px 22px; border-radius: 9px; font-size: 14px; font-weight: 600;
-    color: #64748b; transition: all .18s; font-family: inherit;
+    border: none;
+    background: transparent;
+    padding: 10px 30px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all .22s ease;
+    font-family: inherit;
+    white-space: nowrap;
   }
-  .tab:hover { color: #334155; }
-  .tab.active { background: #fff; color: #4f46e5; box-shadow: 0 2px 8px rgba(30, 41, 59, .09); }
-
-  .panel { display: none; animation: fade .25s ease; }
-  .panel.active { display: block; }
-  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .tab:hover { color: #4f46e5; }
+  .tab.active {
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    color: #fff;
+    box-shadow: 0 5px 14px rgba(99, 102, 241, 0.38);
+  }
 
   .card {
-    background: #fff; border: 1px solid #e8ecf3; border-radius: 16px;
-    padding: 22px; box-shadow: 0 2px 10px rgba(30, 41, 59, .04);
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 26px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(15, 23, 42, 0.04);
+    padding: 24px;
   }
-  .card + .card { margin-top: 20px; }
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeUp .28s ease; }
 
-  .card-title {
-    font-size: 13px; font-weight: 700; color: #475569;
-    margin: 0 0 10px; letter-spacing: .3px;
-    display: flex; align-items: center; justify-content: space-between;
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .lbl {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 10px;
+  }
+  .hint {
+    font-size: 12.5px;
+    color: #94a3b8;
+    font-weight: 400;
+    margin-left: 6px;
   }
 
   textarea {
-    width: 100%; min-height: 132px; resize: vertical;
-    padding: 13px 15px; border-radius: 12px; border: 1px solid #e2e8f0;
-    font-size: 14px; font-family: inherit; line-height: 1.65; outline: none;
-    transition: border-color .15s, box-shadow .15s; color: #1e293b;
+    width: 100%;
+    min-height: 190px;
+    padding: 14px 16px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    resize: vertical;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    line-height: 1.7;
+    color: #1e293b;
+    background: #fcfdff;
   }
-  textarea::placeholder { color: #a3aec0; }
-  textarea:focus { border-color: #a5b4fc; box-shadow: 0 0 0 3px rgba(99, 102, 241, .12); }
-
-  .counter { text-align: right; font-size: 12px; color: #94a3b8; margin-top: 6px; }
-
-  .btn {
-    border: 1px solid #e2e8f0; background: #fff; color: #334155;
-    padding: 10px 18px; border-radius: 11px; cursor: pointer;
-    font-size: 14px; font-weight: 600; font-family: inherit;
-    transition: all .15s; white-space: nowrap;
+  textarea::placeholder { color: #b6c2d4; }
+  textarea:focus {
+    border-color: #818cf8;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.11);
   }
-  .btn:hover { border-color: #c7d2fe; background: #f8faff; color: #4f46e5; }
-  .btn:active { transform: translateY(1px); }
-  .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
-  .btn.primary { background: #4f46e5; border-color: #4f46e5; color: #fff; }
-  .btn.primary:hover { background: #4338ca; border-color: #4338ca; color: #fff; }
-  .btn.ghost { border-color: transparent; color: #94a3b8; }
-  .btn.ghost:hover { background: #fef2f2; color: #dc2626; }
-  .btn.tiny { padding: 6px 12px; font-size: 12.5px; border-radius: 8px; }
 
-  .preview-box {
-    width: 268px; height: 268px; margin: 0 auto;
-    border: 1px dashed #dde3ee; border-radius: 14px; background: #fafbff;
-    display: flex; align-items: center; justify-content: center;
+  .live-tip {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: #94a3b8;
   }
-  .preview-box[hidden] { display: none; }
-  .empty-tip { color: #b6c0d0; font-size: 13.5px; text-align: center; line-height: 1.8; }
-
-  .hint { font-size: 12.5px; color: #94a3b8; margin: 12px 0 0; text-align: center; min-height: 18px; }
-
-  .drop-zone {
-    border: 2px dashed #cbd5e1; border-radius: 14px; padding: 42px 20px;
-    text-align: center; cursor: pointer; background: #fafbff; transition: all .2s;
-    margin-top: 18px;
+  .live-tip .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.18);
+    flex-shrink: 0;
   }
-  .drop-zone:hover, .drop-zone.drag { border-color: #818cf8; background: #f4f6ff; }
-  .drop-zone.drag { transform: scale(1.005); }
-  .drop-icon { font-size: 34px; margin-bottom: 10px; }
-  .drop-zone p { margin: 5px 0; font-size: 14.5px; color: #475569; }
-  .drop-zone .muted { font-size: 12.5px; color: #94a3b8; }
 
-  .batch-toolbar { display: flex; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
-  .muted { color: #94a3b8; font-size: 13px; }
-
-  .batch-head {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+  .config-box {
+    display: flex;
+    align-items: center;
+    gap: clamp(10px, 4vw, 40px);
+    flex-wrap: nowrap;
+    background: #f8faff;
+    border: 1px solid #e8edf7;
+    border-radius: 14px;
+    padding: 15px clamp(12px, 3vw, 22px);
+    margin-bottom: 22px;
+    overflow: hidden;
   }
-  .batch-head h2 { font-size: 15px; margin: 0; }
-  .batch-head .count { color: #4f46e5; }
-  .batch-head > div { display: flex; gap: 10px; }
 
-  .qr-grid {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 16px; max-height: 620px; overflow-y: auto; padding: 2px 6px 2px 2px;
+  .config-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
   }
-  .qr-grid::-webkit-scrollbar { width: 8px; }
-  .qr-grid::-webkit-scrollbar-thumb { background: #dbe2ec; border-radius: 4px; }
-  .qr-grid::-webkit-scrollbar-thumb:hover { background: #c3cddd; }
-  .qr-grid[hidden] { display: none; }
+
+  .config-item.col-item {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .field-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: .2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .check {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .check input {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 19px; height: 19px;
+    border: 1.8px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    position: relative;
+    transition: background .18s ease, border-color .18s ease;
+    flex-shrink: 0;
+  }
+  .check input:checked {
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    border-color: #6366f1;
+  }
+  .check input:checked::after {
+    content: '';
+    position: absolute;
+    left: 6px; top: 2.5px;
+    width: 5px; height: 9px;
+    border: solid #fff;
+    border-width: 0 2.2px 2.2px 0;
+    transform: rotate(45deg);
+  }
+
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1.5px solid #e2e8f0;
+    background: #fcfdff url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 11px center;
+    padding: 9px 30px 9px 12px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-family: inherit;
+    color: #1e293b;
+    cursor: pointer;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s, background-color .2s;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    max-width: 280px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  select:focus {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.11);
+  }
+  select:disabled {
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+    border-color: #e8edf3;
+  }
+
+  .upload-area {
+    border: 2px dashed #cbd5e1;
+    border-radius: 14px;
+    padding: 34px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .22s ease;
+    background: #fbfcff;
+  }
+  .upload-area:hover, .upload-area.dragover {
+    border-color: #818cf8;
+    background: #f5f6ff;
+  }
+  .upload-area svg {
+    width: 38px; height: 38px;
+    stroke: #a5b4fc;
+    margin-bottom: 10px;
+    transition: stroke .2s;
+  }
+  .upload-area:hover svg { stroke: #6366f1; }
+  .upload-area .up-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #334155;
+  }
+  .upload-area .up-sub {
+    font-size: 12.5px;
+    color: #94a3b8;
+    margin-top: 5px;
+  }
+
+  .info-bar {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #eef2ff;
+    border: 1px solid #e0e7ff;
+    color: #4338ca;
+    padding: 11px 16px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 500;
+    word-break: break-all;
+  }
+  .info-bar .info-text {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .info-bar.err {
+    background: #fef2f2;
+    border-color: #fee2e2;
+    color: #b91c1c;
+  }
+  .info-bar.err .btn-clear { display: none; }
+
+  .btn-clear {
+    flex-shrink: 0;
+    border: none;
+    background: #e0e7ff;
+    color: #4338ca;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease;
+    white-space: nowrap;
+  }
+  .btn-clear:hover {
+    background: #c7d2fe;
+    color: #3730a3;
+  }
+  .btn-clear:active {
+    background: #a5b4fc;
+  }
+
+  .result-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 30px 2px 16px;
+    gap: 12px;
+  }
+  .result-head h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .badge {
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 20px;
+    line-height: 1.6;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+    gap: 15px;
+  }
 
   .qr-card {
-    border: 1px solid #eef1f6; border-radius: 13px; padding: 14px;
-    text-align: center; background: #fff; transition: all .18s;
-    cursor: pointer; user-select: none;
-    display: flex; flex-direction: column; align-items: center;
+    background: #fff;
+    border: 1px solid #edf1f7;
+    border-radius: 14px;
+    padding: 13px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    transition: box-shadow .22s ease, transform .22s ease, border-color .22s;
+    animation: popIn .32s cubic-bezier(.22,.9,.36,1) both;
   }
   .qr-card:hover {
-    border-color: #c7d2fe; box-shadow: 0 6px 18px rgba(79, 70, 229, .12);
-    transform: translateY(-2px);
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.11);
+    transform: translateY(-3px);
+    border-color: #e0e7ff;
   }
-  .qr-card canvas { width: 100%; height: auto; display: block; border-radius: 6px; }
-  .qr-card .txt {
-    font-size: 12px; color: #64748b; margin: 11px 0 9px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  .qr-card svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 5px;
   }
-  .qr-card .err { font-size: 12px; color: #dc2626; margin: 11px 0 9px; }
-
-  @media (max-width: 520px) { .qr-grid { grid-template-columns: 1fr; } }
-
-  .lightbox {
-    position: fixed; inset: 0; z-index: 1000;
-    display: flex; align-items: center; justify-content: center; padding: 20px;
-  }
-  .lightbox[hidden] { display: none; }
-
-  .lb-backdrop {
-    position: absolute; inset: 0;
-    background: rgba(15, 23, 42, .62); backdrop-filter: blur(3px);
-    animation: fade .2s ease;
+  .qr-label {
+    font-size: 12px;
+    color: #475569;
+    text-align: center;
+    word-break: break-all;
+    line-height: 1.45;
+    max-height: 3.9em;
+    overflow: hidden;
+    width: 100%;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
 
-  .lb-panel {
-    position: relative; z-index: 1;
-    background: #fff; border-radius: 18px; padding: 20px 22px 18px;
-    display: flex; flex-direction: column; align-items: center; max-width: 100%;
-    box-shadow: 0 26px 64px rgba(15, 23, 42, .38);
-    animation: pop .22s cubic-bezier(.2, .9, .3, 1.2);
-  }
-  @keyframes pop { from { opacity: 0; transform: scale(.93); } to { opacity: 1; transform: none; } }
-
-  #lb-canvas {
-    display: block; width: min(420px, 62vh, 74vw); height: auto;
-    border-radius: 10px; background: #fff;
-    box-shadow: 0 2px 14px rgba(30, 41, 59, .08);
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(.94) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
   }
 
-  .lb-meta {
-    width: 100%; margin-top: 14px;
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-  }
-  .lb-text {
-    font-size: 12.5px; color: #64748b; line-height: 1.6;
-    max-width: min(420px, 74vw); max-height: 3.2em; overflow-y: auto;
-    word-break: break-all; text-align: center;
-  }
-  .lb-index {
-    font-size: 12.5px; font-weight: 700; color: #4f46e5;
-    background: #eef2ff; border-radius: 999px; padding: 3px 12px;
-  }
-  .lb-actions { margin-top: 14px; display: flex; gap: 10px; }
-
-  .lb-close {
-    position: absolute; top: 10px; right: 10px;
-    width: 34px; height: 34px; border-radius: 50%;
-    border: 0; background: #f1f5f9; color: #64748b;
-    font-size: 15px; line-height: 1; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all .15s; font-family: inherit;
-  }
-  .lb-close:hover { background: #fee2e2; color: #dc2626; }
-
-  .lb-nav {
-    position: absolute; top: 50%; transform: translateY(-50%);
-    width: 44px; height: 44px; border-radius: 50%;
-    border: 1px solid #e2e8f0; background: #fff; color: #475569;
-    font-size: 24px; line-height: 1; cursor: pointer; font-family: inherit;
-    display: flex; align-items: center; justify-content: center;
-    padding-bottom: 3px;
-    box-shadow: 0 6px 18px rgba(30, 41, 59, .16);
-    transition: all .15s; z-index: 2;
-  }
-  .lb-nav:hover { background: #eef2ff; color: #4f46e5; border-color: #c7d2fe; }
-  .lb-nav:active { transform: translateY(-50%) scale(.94); }
-  .lb-nav.prev { left: -20px; }
-  .lb-nav.next { right: -20px; }
-  .lb-nav[hidden] { display: none; }
-
-  @media (max-width: 640px) {
-    .lightbox { padding: 12px; }
-    .lb-panel { padding: 16px 16px 14px; }
-    .lb-nav { width: 38px; height: 38px; font-size: 21px; }
-    .lb-nav.prev { left: 6px; }
-    .lb-nav.next { right: 6px; }
+  .empty {
+    text-align: center;
+    padding: 44px 20px;
+    color: #b0bccc;
+    font-size: 14px;
+    background: #fafbfd;
+    border-radius: 16px;
+    border: 1px dashed #e2e8f0;
   }
 
-  #toast {
-    position: fixed; left: 50%; bottom: 36px; transform: translate(-50%, 20px);
-    background: #1e293b; color: #fff; padding: 11px 22px; border-radius: 11px;
-    font-size: 13.5px; opacity: 0; pointer-events: none; transition: all .28s;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, .22); z-index: 1200;
-  }
-  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .hidden { display: none !important; }
 
-  .batch-options { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 14px; }
-  .checkbox-label {
-    display: inline-flex; align-items: center; gap: 7px;
-    font-size: 14px; font-weight: 600; color: #475569; cursor: pointer; user-select: none;
+  @media (max-width: 560px) {
+    body { padding: 22px 14px 50px; }
+    header h1 { font-size: 23px; }
+    .card { padding: 18px; }
+    .tab { padding: 9px 20px; font-size: 14px; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(126px, 1fr)); gap: 11px; }
+    .result-head { margin-top: 24px; }
   }
-  .checkbox-label input { width: 17px; height: 17px; accent-color: #4f46e5; cursor: pointer; }
-  .col-label { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600; color: #475569; }
-  .col-input {
-    width: 90px; padding: 7px 12px; border-radius: 9px;
-    border: 1px solid #e2e8f0; font-size: 14px; font-family: inherit;
-    color: #1e293b; outline: none; background: #fff;
-    text-transform: uppercase; letter-spacing: .5px;
-    transition: border-color .15s, box-shadow .15s;
-  }
-  .col-input::placeholder { color: #a3aec0; text-transform: none; letter-spacing: normal; }
-  .col-input:focus { border-color: #a5b4fc; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
 </style>
 </head>
 <body>
 
 <div class="app">
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-          <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm8-2h2v2h-2v-2zm4 0h2v2h-2v-2zm-2 2h2v2h-2v-2zm2 2h2v2h-2v-2zm-4 2h2v2h-2v-2zm4 0h2v2h-2v-2z"/>
-        </svg>
-      </div>
-      <h1>二维码生成工具</h1>
-    </div>
+  <header>
+    <h1>二维码批量生成器</h1>
   </header>
 
-  <nav class="tabs">
-    <button class="tab active" data-tab="single">单个生成</button>
-    <button class="tab" data-tab="batch">批量生成（Excel）</button>
-  </nav>
-
-  <main>
-    <section class="panel active" id="panel-single">
-      <div class="card">
-        <h2 class="card-title">二维码内容</h2>
-        <textarea id="single-input" placeholder="每行一个内容…"></textarea>
-        <div class="counter"><span id="char-count">0</span> 个二维码</div>
-      </div>
-
-      <div class="card">
-        <h2 class="card-title">生成结果</h2>
-        <div class="preview-box" id="preview-box">
-          <div class="empty-tip">输入内容后<br>自动生成二维码</div>
-        </div>
-        <div class="qr-grid" id="single-grid" hidden></div>
-        <p class="hint" id="single-hint"></p>
-      </div>
-    </section>
-
-    <section class="panel" id="panel-batch">
-      <div class="card">
-        <h2 class="card-title">导入设置</h2>
-        <div class="batch-options">
-          <label class="checkbox-label">
-            <input type="checkbox" id="has-header" checked>
-            <span>首行为标题</span>
-          </label>
-          <label class="col-label">
-            内容列：
-            <input type="text" id="content-col" class="col-input" value="A" placeholder="如 A、B、C" maxlength="3">
-          </label>
-        </div>
-
-        <div class="drop-zone" id="drop-zone">
-          <div class="drop-icon">📄</div>
-          <p><strong>点击选择文件</strong> 或拖拽到此处</p>
-          <p class="muted">支持 .xlsx / .xls / .csv</p>
-        </div>
-        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" hidden>
-        <div class="batch-toolbar">
-          <button class="btn" id="download-template">下载 Excel 模板</button>
-          <span class="muted">最多 500 条</span>
-          <span class="muted" id="batch-status" style="margin-left:auto"></span>
-        </div>
-      </div>
-
-      <div class="card" id="batch-result" hidden>
-        <div class="batch-head">
-          <h2>生成结果 <span class="count" id="batch-count"></span></h2>
-          <div>
-            <button class="btn primary" id="download-all">打包下载 ZIP</button>
-            <button class="btn ghost" id="clear-batch">清空</button>
-          </div>
-        </div>
-        <div class="qr-grid" id="qr-grid"></div>
-      </div>
-    </section>
-  </main>
-</div>
-
-<div class="lightbox" id="lightbox" hidden>
-  <div class="lb-backdrop" id="lb-backdrop"></div>
-  <div class="lb-panel">
-    <button class="lb-close" id="lb-close" title="关闭 (Esc)">✕</button>
-    <button class="lb-nav prev" id="lb-prev" title="上一个 (←)">‹</button>
-    <button class="lb-nav next" id="lb-next" title="下一个 (→)">›</button>
-    <canvas id="lb-canvas"></canvas>
-    <div class="lb-meta">
-      <div class="lb-text" id="lb-text"></div>
-      <div class="lb-index" id="lb-index"></div>
-    </div>
-    <div class="lb-actions">
-      <button class="btn primary" id="lb-download">下载 PNG</button>
-    </div>
+  <div class="tabs">
+    <button class="tab active" data-tab="manual">多行生成</button>
+    <button class="tab" data-tab="excel">Excel 导入</button>
   </div>
+
+  <section class="card">
+    <div class="panel active" id="panel-manual">
+      <label class="lbl" for="manualInput">二维码内容</label>
+      <textarea id="manualInput" placeholder="请输入内容…"></textarea>
+      <div class="live-tip"><span class="dot"></span>输入内容后自动生成</div>
+
+      <div class="result-head">
+        <h2>生成结果 <span class="badge hidden" id="manualBadge">0</span></h2>
+      </div>
+      <div id="manualEmpty" class="empty">还没有生成任何二维码</div>
+      <div id="manualGrid" class="grid"></div>
+    </div>
+
+    <div class="panel" id="panel-excel">
+
+      <div class="config-box">
+        <div class="config-item">
+          <span class="field-label">标题</span>
+          <label class="check">
+            <input type="checkbox" id="skipHeader" checked>
+          </label>
+        </div>
+
+        <div class="config-item col-item">
+          <span class="field-label">列选择</span>
+          <select id="colSelect" disabled>
+            <option value="">请先导入表格</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="lbl">导入表格文件 <span class="hint">支持 .xlsx / .csv</span></label>
+
+      <div class="upload-area" id="uploadArea">
+        <input type="file" id="excelFile" accept=".xlsx,.csv" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <div class="up-title">点击选择文件，或拖拽到此处</div>
+        <div class="up-sub">支持 Excel (.xlsx) 与 CSV (.csv)</div>
+      </div>
+
+      <div class="info-bar hidden" id="excelInfo">
+        <span class="info-text" id="excelInfoText"></span>
+        <button type="button" class="btn-clear" id="clearFileBtn">清除</button>
+      </div>
+
+      <div class="result-head">
+        <h2>Excel 导入结果 <span class="badge hidden" id="excelBadge">0</span></h2>
+      </div>
+      <div id="excelEmpty" class="empty">还没有生成任何二维码</div>
+      <div id="excelGrid" class="grid"></div>
+    </div>
+  </section>
 </div>
 
-<div id="toast"></div>
 
 <script>
-/* ============================================================
- * QR 编码器（内部实现保持不变）
- * ============================================================ */
-const QR = (() => {
-  const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
-  (() => {
+const QRCore = (function () {
+
+  const EXP = new Array(255);
+  const LOG = new Array(256);
+  (function () {
     let x = 1;
     for (let i = 0; i < 255; i++) {
-      EXP[i] = x; LOG[x] = i;
-      x <<= 1; if (x & 0x100) x ^= 0x11d;
+      EXP[i] = x;
+      LOG[x] = i;
+      x <<= 1;
+      if (x & 0x100) x ^= 0x11D;
     }
-    for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
   })();
-  const gmul = (a, b) => (a === 0 || b === 0) ? 0 : EXP[LOG[a] + LOG[b]];
+
+  function gmul(a, b) {
+    if (a === 0 || b === 0) return 0;
+    return EXP[(LOG[a] + LOG[b]) % 255];
+  }
 
   const genCache = {};
-  function rsGenPoly(deg) {
-    if (genCache[deg]) return genCache[deg];
+  function rsGenPoly(n) {
+    if (genCache[n]) return genCache[n];
     let poly = [1];
-    for (let i = 0; i < deg; i++) {
+    for (let i = 0; i < n; i++) {
       const next = new Array(poly.length + 1).fill(0);
       for (let j = 0; j < poly.length; j++) {
         next[j] ^= poly[j];
@@ -368,22 +506,26 @@ const QR = (() => {
       }
       poly = next;
     }
-    return (genCache[deg] = poly);
+    genCache[n] = poly;
+    return poly;
   }
 
   function rsEncode(data, ecLen) {
     const gen = rsGenPoly(ecLen);
-    const res = new Uint8Array(data.length + ecLen);
-    res.set(data);
+    const res = new Array(ecLen).fill(0);
     for (let i = 0; i < data.length; i++) {
-      const coef = res[i];
-      if (!coef) continue;
-      for (let j = 0; j < gen.length; j++) res[i + j] ^= gmul(gen[j], coef);
+      const factor = data[i] ^ res[0];
+      res.shift();
+      res.push(0);
+      if (factor !== 0) {
+        for (let j = 0; j < ecLen; j++) {
+          res[j] ^= gmul(gen[j + 1], factor);
+        }
+      }
     }
-    return res.subarray(data.length);
+    return res;
   }
 
-  const EC_LEVELS = ['L', 'M', 'Q', 'H'];
   const RS_BLOCK_TABLE = [
     [1,26,19],[1,26,16],[1,26,13],[1,26,9],
     [1,44,34],[1,44,28],[1,44,22],[1,44,16],
@@ -394,891 +536,823 @@ const QR = (() => {
     [2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],
     [2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],
     [2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],
-    [2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16]
+    [2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],
+    [4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],
+    [2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],
+    [4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],
+    [3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],
+    [5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],
+    [5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],
+    [1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],
+    [5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],
+    [3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],
+    [3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],
+    [4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],
+    [2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],
+    [4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],
+    [6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],
+    [8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],
+    [10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],
+    [8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],
+    [3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],
+    [7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],
+    [5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],
+    [13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],
+    [17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],
+    [17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],
+    [13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],
+    [12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],
+    [6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],
+    [17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],
+    [4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],
+    [20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],
+    [19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]
   ];
 
-  function getBlocks(version, ecLevel) {
-    const entry = RS_BLOCK_TABLE[(version - 1) * 4 + EC_LEVELS.indexOf(ecLevel)];
-    const groups = [];
-    for (let i = 0; i < entry.length; i += 3)
-      groups.push({ count: entry[i], total: entry[i + 1], data: entry[i + 2] });
-    return groups;
-  }
-  const getCap = (v, ec) => getBlocks(v, ec).reduce((s, g) => s + g.count * g.data, 0);
+  const PATTERN_POSITION_TABLE = [
+    [],
+    [6,18],[6,22],[6,26],[6,30],[6,34],
+    [6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],
+    [6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],
+    [6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],
+    [6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],
+    [6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],
+    [6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],
+    [6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],
+    [6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],
+    [6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]
+  ];
 
-  function utf8Bytes(str) {
-    const out = [];
-    for (let i = 0; i < str.length; i++) {
-      const c = str.charCodeAt(i);
-      if (c < 0x80) out.push(c);
-      else if (c < 0x800) out.push(0xc0 | (c >> 6), 0x80 | (c & 63));
-      else if (c >= 0xd800 && c < 0xdc00 && i + 1 < str.length) {
-        const c2 = str.charCodeAt(++i);
-        const cp = 0x10000 + ((c - 0xd800) << 10) + (c2 - 0xdc00);
-        out.push(0xf0 | (cp >> 18), 0x80 | ((cp >> 12) & 63),
-                 0x80 | ((cp >> 6) & 63), 0x80 | (cp & 63));
-      } else out.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+  const EC_INDEX = { L: 0, M: 1, Q: 2, H: 3 };
+
+  function getBCHDigit(data) {
+    let digit = 0;
+    while (data !== 0) { digit++; data >>>= 1; }
+    return digit;
+  }
+  function getBCHTypeInfo(data) {
+    const G15 = 0x537;
+    let d = data << 10;
+    while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+      d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15)));
     }
-    return out;
+    return ((data << 10) | d) ^ 0x5412;
   }
-
-  function buildCodewords(bytes, version, ecLevel) {
-    const cap = getCap(version, ecLevel), maxBits = cap * 8;
-    const bits = [];
-    const push = (v, len) => { for (let i = len - 1; i >= 0; i--) bits.push((v >>> i) & 1); };
-    push(4, 4);
-    push(bytes.length, version < 10 ? 8 : 16);
-    bytes.forEach(b => push(b, 8));
-    for (let i = 0; i < 4 && bits.length < maxBits; i++) bits.push(0);
-    while (bits.length % 8 !== 0) bits.push(0);
-    const cw = [];
-    for (let i = 0; i < bits.length; i += 8) {
-      let v = 0;
-      for (let j = 0; j < 8; j++) v = (v << 1) | bits[i + j];
-      cw.push(v);
+  function getBCHTypeNumber(data) {
+    const G18 = 0x1F25;
+    let d = data << 12;
+    while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+      d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18)));
     }
-    const pad = [0xec, 0x11];
-    let pi = 0;
-    while (cw.length < cap) cw.push(pad[pi++ % 2]);
-    return cw;
+    return (data << 12) | d;
   }
 
-  function interleave(cw, version, ecLevel) {
-    const groups = getBlocks(version, ecLevel);
-    const dataBlocks = [], ecBlocks = [];
-    let offset = 0;
-    for (const g of groups) {
-      const ecLen = g.total - g.data;
-      for (let i = 0; i < g.count; i++) {
-        const d = cw.slice(offset, offset + g.data);
-        offset += g.data;
-        dataBlocks.push(d);
-        ecBlocks.push(rsEncode(d, ecLen));
-      }
+  function maskFn(pattern, i, j) {
+    switch (pattern) {
+      case 0: return (i + j) % 2 === 0;
+      case 1: return i % 2 === 0;
+      case 2: return j % 3 === 0;
+      case 3: return (i + j) % 3 === 0;
+      case 4: return (Math.floor(i / 2) + Math.floor(j / 3)) % 2 === 0;
+      case 5: return ((i * j) % 2) + ((i * j) % 3) === 0;
+      case 6: return (((i * j) % 2) + ((i * j) % 3)) % 2 === 0;
+      case 7: return (((i * j) % 3) + ((i + j) % 2)) % 2 === 0;
     }
-    const result = [];
-    const maxData = Math.max(...dataBlocks.map(b => b.length));
-    for (let i = 0; i < maxData; i++)
-      for (const b of dataBlocks) if (i < b.length) result.push(b[i]);
-    const maxEc = Math.max(...ecBlocks.map(b => b.length));
-    for (let i = 0; i < maxEc; i++)
-      for (const b of ecBlocks) if (i < b.length) result.push(b[i]);
-    return result;
+    return false;
   }
 
-  const ALIGN_POS = {
-    1: [], 2: [6,18], 3: [6,22], 4: [6,26], 5: [6,30],
-    6: [6,34], 7: [6,22,38], 8: [6,24,42], 9: [6,26,46], 10: [6,28,50]
-  };
-  const EC_BITS = { L: 1, M: 0, Q: 3, H: 2 };
-
-  function formatBits(ecLevel, mask) {
-    const data = (EC_BITS[ecLevel] << 3) | mask;
-    let bch = data << 10;
-    for (let i = 14; i >= 10; i--) if ((bch >> i) & 1) bch ^= 0x537 << (i - 10);
-    return (((data << 10) | (bch & 0x3ff)) ^ 0x5412) & 0x7fff;
-  }
-  function versionBits(version) {
-    let bch = version << 12;
-    for (let i = 17; i >= 12; i--) if ((bch >> i) & 1) bch ^= 0x1f25 << (i - 12);
-    return ((version << 12) | (bch & 0xfff)) & 0x3ffff;
-  }
-
-  function buildBase(version) {
-    const size = version * 4 + 17;
-    const m = [], res = [];
-    for (let i = 0; i < size; i++) {
-      m.push(new Array(size).fill(0));
-      res.push(new Array(size).fill(false));
+  function chooseVersion(byteLen, ecIdx) {
+    for (let v = 1; v <= 40; v++) {
+      const raw = RS_BLOCK_TABLE[(v - 1) * 4 + ecIdx];
+      let totalData = 0;
+      for (let i = 0; i < raw.length; i += 3) totalData += raw[i] * raw[i + 2];
+      const cbits = v <= 9 ? 8 : 16;
+      if (byteLen >= (1 << cbits)) continue;
+      if (4 + cbits + byteLen * 8 <= totalData * 8) return v;
     }
-    const set = (r, c, v) => { m[r][c] = v; res[r][c] = true; };
+    return -1;
+  }
 
-    [[0, 0], [0, size - 7], [size - 7, 0]].forEach(([fr, fc]) => {
-      for (let i = -1; i <= 7; i++) for (let j = -1; j <= 7; j++) {
-        const r = fr + i, c = fc + j;
+  function getBlocks(version, ecIdx) {
+    const raw = RS_BLOCK_TABLE[(version - 1) * 4 + ecIdx];
+    const blocks = [];
+    for (let i = 0; i < raw.length; i += 3) {
+      const n = raw[i], total = raw[i + 1], dc = raw[i + 2];
+      for (let k = 0; k < n; k++) blocks.push({ total, dc });
+    }
+    return blocks;
+  }
+
+  function placeFinder(m, size, r0, c0) {
+    for (let i = -1; i <= 7; i++) {
+      for (let j = -1; j <= 7; j++) {
+        const r = r0 + i, c = c0 + j;
         if (r < 0 || r >= size || c < 0 || c >= size) continue;
-        const ring = (i >= 0 && i <= 6 && (j === 0 || j === 6)) ||
-                     (j >= 0 && j <= 6 && (i === 0 || i === 6));
-        const core = i >= 2 && i <= 4 && j >= 2 && j <= 4;
-        set(r, c, (ring || core) ? 1 : 0);
+        const dark =
+          (i >= 0 && i <= 6 && (j === 0 || j === 6)) ||
+          (j >= 0 && j <= 6 && (i === 0 || i === 6)) ||
+          (i >= 2 && i <= 4 && j >= 2 && j <= 4);
+        m[r][c] = dark ? 1 : 0;
       }
-    });
+    }
+  }
+
+  function setupTypeInfo(m, size, ecIdx, mask) {
+    const data = (ecIdx << 3) | mask;
+    const bits = getBCHTypeInfo(data);
+    for (let i = 0; i < 15; i++) {
+      const mod = ((bits >> i) & 1) === 1 ? 1 : 0;
+      if (i < 6) m[i][8] = mod;
+      else if (i < 8) m[i + 1][8] = mod;
+      else m[size - 15 + i][8] = mod;
+    }
+    for (let i = 0; i < 15; i++) {
+      const mod = ((bits >> i) & 1) === 1 ? 1 : 0;
+      if (i < 8) m[8][size - i - 1] = mod;
+      else if (i < 9) m[8][15 - i] = mod;
+      else m[8][15 - i - 1] = mod;
+    }
+    m[size - 8][8] = 1;
+  }
+
+  function setupTypeNumber(m, size, version) {
+    const bits = getBCHTypeNumber(version);
+    for (let i = 0; i < 18; i++) {
+      const mod = ((bits >> i) & 1) === 1 ? 1 : 0;
+      m[Math.floor(i / 3)][i % 3 + size - 11] = mod;
+      m[i % 3 + size - 11][Math.floor(i / 3)] = mod;
+    }
+  }
+
+  function makeBaseMatrix(version, size, ecIdx) {
+    const m = [];
+    for (let i = 0; i < size; i++) m.push(new Array(size).fill(null));
+
+    placeFinder(m, size, 0, 0);
+    placeFinder(m, size, 0, size - 7);
+    placeFinder(m, size, size - 7, 0);
+
+    const pos = PATTERN_POSITION_TABLE[version - 1];
+    for (const r of pos) {
+      for (const c of pos) {
+        if (m[r][c] !== null) continue;
+        for (let dr = -2; dr <= 2; dr++) {
+          for (let dc = -2; dc <= 2; dc++) {
+            m[r + dr][c + dc] =
+              (Math.abs(dr) === 2 || Math.abs(dc) === 2 || (dr === 0 && dc === 0)) ? 1 : 0;
+          }
+        }
+      }
+    }
 
     for (let i = 8; i < size - 8; i++) {
-      set(6, i, i % 2 === 0 ? 1 : 0);
-      set(i, 6, i % 2 === 0 ? 1 : 0);
+      if (m[6][i] === null) m[6][i] = (i % 2 === 0) ? 1 : 0;
+      if (m[i][6] === null) m[i][6] = (i % 2 === 0) ? 1 : 0;
     }
 
-    for (const r of ALIGN_POS[version]) for (const c of ALIGN_POS[version]) {
-      const near = (r <= 8 && c <= 8) || (r <= 8 && c >= size - 9) || (r >= size - 9 && c <= 8);
-      if (near) continue;
-      for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++)
-        set(r + i, c + j, Math.max(Math.abs(i), Math.abs(j)) !== 1 ? 1 : 0);
-    }
+    setupTypeInfo(m, size, ecIdx, 0);
 
-    set(size - 8, 8, 1);
-    for (let i = 0; i < 9; i++) { res[8][i] = true; res[i][8] = true; }
-    for (let i = 0; i < 8; i++) { res[8][size - 1 - i] = true; res[size - 1 - i][8] = true; }
+    if (version >= 7) setupTypeNumber(m, size, version);
 
-    if (version >= 7) {
-      const vb = versionBits(version);
-      for (let i = 0; i < 18; i++) {
-        const bit = (vb >> i) & 1;
-        const r = Math.floor(i / 3), c = i % 3;
-        set(r, size - 11 + c, bit);
-        set(size - 11 + c, r, bit);
-      }
-    }
-    return { m, res, size };
+    m[size - 8][8] = 1;
+
+    return m;
   }
 
-  function placeData(m, res, codewords, size) {
-    const bits = [];
-    for (const cw of codewords)
-      for (let i = 7; i >= 0; i--) bits.push((cw >> i) & 1);
-    let idx = 0, upward = true;
+  function mapData(m, size, data, mask) {
+    let inc = -1;
+    let row = size - 1;
+    let bitIndex = 7;
+    let byteIndex = 0;
+
     for (let col = size - 1; col > 0; col -= 2) {
-      if (col === 6) col--;
-      for (let i = 0; i < size; i++) {
-        const row = upward ? size - 1 - i : i;
-        for (let j = 0; j < 2; j++) {
-          const c = col - j;
-          if (res[row][c]) continue;
-          m[row][c] = idx < bits.length ? bits[idx++] : 0;
+      if (col === 6) col = 5;
+      while (true) {
+        for (let c = 0; c < 2; c++) {
+          const cc = col - c;
+          if (m[row][cc] === null) {
+            let dark = false;
+            if (byteIndex < data.length) {
+              dark = ((data[byteIndex] >>> bitIndex) & 1) === 1;
+            }
+            if (maskFn(mask, row, cc)) dark = !dark;
+            m[row][cc] = dark ? 1 : 0;
+            bitIndex--;
+            if (bitIndex === -1) { byteIndex++; bitIndex = 7; }
+          }
+        }
+        row += inc;
+        if (row < 0 || row >= size) {
+          row -= inc;
+          inc = -inc;
+          break;
         }
       }
-      upward = !upward;
     }
   }
 
-  const MASK_FN = [
-    (r, c) => (r + c) % 2 === 0,
-    r => r % 2 === 0,
-    (r, c) => c % 3 === 0,
-    (r, c) => (r + c) % 3 === 0,
-    (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0,
-    (r, c) => ((r * c) % 2) + ((r * c) % 3) === 0,
-    (r, c) => (((r * c) % 2) + ((r * c) % 3)) % 2 === 0,
-    (r, c) => (((r + c) % 2) + ((r * c) % 3)) % 2 === 0
-  ];
-  const PAT_A = [1,0,1,1,1,0,1,0,0,0,0];
-  const PAT_B = [0,0,0,0,1,0,1,1,1,0,1];
+  function lostPoint(m, size) {
+    let lost = 0;
 
-  function penalty(m) {
-    const size = m.length;
-    let p = 0;
-    for (let i = 0; i < size; i++) {
+    for (let row = 0; row < size; row++) {
       let run = 1;
-      for (let j = 1; j < size; j++) {
-        if (m[i][j] === m[i][j - 1]) run++;
-        else { if (run >= 5) p += 3 + run - 5; run = 1; }
+      for (let col = 1; col < size; col++) {
+        if (m[row][col] === m[row][col - 1]) run++;
+        else { if (run >= 5) lost += 3 + (run - 5); run = 1; }
       }
-      if (run >= 5) p += 3 + run - 5;
-      run = 1;
-      for (let j = 1; j < size; j++) {
-        if (m[j][i] === m[j - 1][i]) run++;
-        else { if (run >= 5) p += 3 + run - 5; run = 1; }
-      }
-      if (run >= 5) p += 3 + run - 5;
+      if (run >= 5) lost += 3 + (run - 5);
     }
-    for (let i = 0; i < size - 1; i++)
-      for (let j = 0; j < size - 1; j++) {
-        const v = m[i][j];
-        if (v === m[i][j + 1] && v === m[i + 1][j] && v === m[i + 1][j + 1]) p += 3;
+    for (let col = 0; col < size; col++) {
+      let run = 1;
+      for (let row = 1; row < size; row++) {
+        if (m[row][col] === m[row - 1][col]) run++;
+        else { if (run >= 5) lost += 3 + (run - 5); run = 1; }
       }
-    for (let i = 0; i < size; i++)
-      for (let j = 0; j <= size - 11; j++) {
-        let okA = true, okB = true, okC = true, okD = true;
+      if (run >= 5) lost += 3 + (run - 5);
+    }
+
+    for (let row = 0; row < size - 1; row++) {
+      for (let col = 0; col < size - 1; col++) {
+        const v = m[row][col];
+        if (v === m[row][col + 1] && v === m[row + 1][col] && v === m[row + 1][col + 1]) lost += 3;
+      }
+    }
+
+    const pat1 = [1,0,1,1,1,0,1,0,0,0,0];
+    const pat2 = [0,0,0,0,1,0,1,1,1,0,1];
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col + 11 <= size; col++) {
+        let ok1 = true, ok2 = true;
         for (let k = 0; k < 11; k++) {
-          if (m[i][j + k] !== PAT_A[k]) okA = false;
-          if (m[i][j + k] !== PAT_B[k]) okB = false;
-          if (m[j + k][i] !== PAT_A[k]) okC = false;
-          if (m[j + k][i] !== PAT_B[k]) okD = false;
+          if (m[row][col + k] !== pat1[k]) ok1 = false;
+          if (m[row][col + k] !== pat2[k]) ok2 = false;
         }
-        if (okA) p += 40; if (okB) p += 40;
-        if (okC) p += 40; if (okD) p += 40;
+        if (ok1) lost += 40;
+        if (ok2) lost += 40;
       }
+    }
+    for (let col = 0; col < size; col++) {
+      for (let row = 0; row + 11 <= size; row++) {
+        let ok1 = true, ok2 = true;
+        for (let k = 0; k < 11; k++) {
+          if (m[row + k][col] !== pat1[k]) ok1 = false;
+          if (m[row + k][col] !== pat2[k]) ok2 = false;
+        }
+        if (ok1) lost += 40;
+        if (ok2) lost += 40;
+      }
+    }
+
     let dark = 0;
-    for (let i = 0; i < size; i++)
-      for (let j = 0; j < size; j++) if (m[i][j]) dark++;
-    p += Math.floor(Math.abs(dark * 100 / (size * size) - 50) / 5) * 10;
-    return p;
+    for (let row = 0; row < size; row++)
+      for (let col = 0; col < size; col++) if (m[row][col]) dark++;
+    const ratio = dark * 100 / (size * size);
+    lost += Math.floor(Math.abs(ratio - 50) / 5) * 10;
+
+    return lost;
   }
 
-  function writeFormat(m, size, ecLevel, mask) {
-    const bits = formatBits(ecLevel, mask);
-    for (let i = 0; i < 15; i++) {
-      const v = (bits >> i) & 1;
-      if (i < 6) m[i][8] = v;
-      else if (i < 8) m[i + 1][8] = v;
-      else m[size - 15 + i][8] = v;
-      if (i < 8) m[8][size - i - 1] = v;
-      else if (i < 9) m[8][15 - i] = v;
-      else m[8][14 - i] = v;
+  function generate(text, ecLevel) {
+    const ecIdx = EC_INDEX[ecLevel] !== undefined ? EC_INDEX[ecLevel] : 2;
+    const data = new TextEncoder().encode(text);
+
+    const version = chooseVersion(data.length, ecIdx);
+    if (version < 0) throw new Error('内容过长，超出二维码容量');
+
+    const size = version * 4 + 17;
+    const blocks = getBlocks(version, ecIdx);
+    let totalDataCodewords = 0;
+    for (const b of blocks) totalDataCodewords += b.dc;
+
+    const bits = [];
+    const pushBits = (val, len) => {
+      for (let i = len - 1; i >= 0; i--) bits.push((val >>> i) & 1);
+    };
+
+    pushBits(4, 4);
+    pushBits(data.length, version <= 9 ? 8 : 16);
+    for (let i = 0; i < data.length; i++) pushBits(data[i], 8);
+
+    const totalBits = totalDataCodewords * 8;
+    const term = Math.min(4, totalBits - bits.length);
+    for (let i = 0; i < term; i++) bits.push(0);
+    while (bits.length % 8 !== 0) bits.push(0);
+
+    const pads = [0xEC, 0x11];
+    let pi = 0;
+    while (bits.length < totalBits) pushBits(pads[pi++ % 2], 8);
+
+    const dataBytes = [];
+    for (let i = 0; i < bits.length; i += 8) {
+      let b = 0;
+      for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
+      dataBytes.push(b);
     }
-  }
 
-  function generate(text, ecLevel = 'Q') {
-    const bytes = utf8Bytes(text);
-    let version = 0;
-    for (let v = 1; v <= 10; v++) {
-      const ccBits = v < 10 ? 8 : 16;
-      if (4 + ccBits + bytes.length * 8 <= getCap(v, ecLevel) * 8) { version = v; break; }
+    const ecLen = blocks[0].total - blocks[0].dc;
+    let offset = 0;
+    const blockData = blocks.map(b => {
+      const d = dataBytes.slice(offset, offset + b.dc);
+      offset += b.dc;
+      return { data: d, ec: rsEncode(d, ecLen) };
+    });
+
+    const finalBytes = [];
+    const maxDc = Math.max.apply(null, blocks.map(b => b.dc));
+    for (let i = 0; i < maxDc; i++) {
+      for (const b of blockData) {
+        if (i < b.data.length) finalBytes.push(b.data[i]);
+      }
     }
-    if (!version) throw new Error('内容过长，超出版本 10 的容量上限（约 200 字节）');
+    for (let i = 0; i < ecLen; i++) {
+      for (const b of blockData) finalBytes.push(b.ec[i]);
+    }
 
-    const finalCW = interleave(buildCodewords(bytes, version, ecLevel), version, ecLevel);
-    const { m, res, size } = buildBase(version);
-    placeData(m, res, finalCW, size);
-
-    let best = null, bestScore = Infinity;
+    let bestMatrix = null, bestScore = Infinity;
     for (let mask = 0; mask < 8; mask++) {
-      const cand = m.map(row => row.slice());
-      const fn = MASK_FN[mask];
-      for (let r = 0; r < size; r++)
-        for (let c = 0; c < size; c++)
-          if (!res[r][c] && fn(r, c)) cand[r][c] ^= 1;
-      writeFormat(cand, size, ecLevel, mask);
-      const score = penalty(cand);
-      if (score < bestScore) { bestScore = score; best = cand; }
+      const m = makeBaseMatrix(version, size, ecIdx);
+      mapData(m, size, finalBytes, mask);
+      setupTypeInfo(m, size, ecIdx, mask);
+      const score = lostPoint(m, size);
+      if (score < bestScore) { bestScore = score; bestMatrix = m; }
     }
-    return best;
+
+    return bestMatrix;
   }
 
   return { generate };
 })();
 
 
-/* ============================================================
- * MiniXLSX：解析 .xlsx 为二维数组
- * ============================================================ */
-const MiniXLSX = (() => {
-  function findEOCD(view, len) {
-    const min = Math.max(0, len - 65558);
-    for (let i = len - 22; i >= min; i--)
-      if (view.getUint32(i, true) === 0x06054b50) return i;
-    return -1;
+async function unzip(arrayBuffer) {
+  if (typeof DecompressionStream === 'undefined') {
+    throw new Error('当前浏览器版本过低，无法解析 xlsx。请使用新版 Chrome / Edge / Firefox / Safari，或改用 CSV 文件。');
   }
 
-  function readZipEntries(buffer) {
-    const view = new DataView(buffer), u8 = new Uint8Array(buffer);
-    const eocd = findEOCD(view, buffer.byteLength);
-    if (eocd < 0) throw new Error('不是有效的 xlsx 文件（未找到 ZIP 结构）');
-    const count = view.getUint16(eocd + 10, true);
-    let p = view.getUint32(eocd + 16, true);
-    const entries = {};
-    for (let i = 0; i < count; i++) {
-      if (p + 46 > buffer.byteLength) break;
-      if (view.getUint32(p, true) !== 0x02014b50) break;
-      const method     = view.getUint16(p + 10, true);
-      const compSize   = view.getUint32(p + 20, true);
-      const nameLen    = view.getUint16(p + 28, true);
-      const extraLen   = view.getUint16(p + 30, true);
-      const commentLen = view.getUint16(p + 32, true);
-      const localOff   = view.getUint32(p + 42, true);
-      const name = new TextDecoder('utf-8').decode(u8.subarray(p + 46, p + 46 + nameLen));
-      const lNameLen  = view.getUint16(localOff + 26, true);
-      const lExtraLen = view.getUint16(localOff + 28, true);
-      entries[name] = {
-        method, compSize,
-        dataStart: localOff + 30 + lNameLen + lExtraLen
-      };
-      p += 46 + nameLen + extraLen + commentLen;
-    }
-    return entries;
+  const view = new DataView(arrayBuffer);
+  const u8 = new Uint8Array(arrayBuffer);
+
+  let eocd = -1;
+  const minPos = Math.max(0, u8.length - 22 - 65535);
+  for (let i = u8.length - 22; i >= minPos; i--) {
+    if (view.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('文件格式无效，不是标准的 xlsx / zip 文件');
+
+  const cdCount = view.getUint16(eocd + 10, true);
+  const cdOffset = view.getUint32(eocd + 16, true);
+
+  const entries = {};
+  let p = cdOffset;
+  for (let i = 0; i < cdCount; i++) {
+    if (view.getUint32(p, true) !== 0x02014b50) break;
+    const method = view.getUint16(p + 10, true);
+    const compSize = view.getUint32(p + 20, true);
+    const nameLen = view.getUint16(p + 28, true);
+    const extraLen = view.getUint16(p + 30, true);
+    const commentLen = view.getUint16(p + 32, true);
+    const localOffset = view.getUint32(p + 42, true);
+    const name = new TextDecoder('utf-8').decode(u8.subarray(p + 46, p + 46 + nameLen));
+    entries[name] = { method, compSize, localOffset };
+    p += 46 + nameLen + extraLen + commentLen;
   }
 
-  async function extract(u8, entry) {
-    const raw = u8.subarray(entry.dataStart, entry.dataStart + entry.compSize);
-    if (entry.method === 0) return raw;
-    if (entry.method === 8) {
-      if (typeof DecompressionStream === 'undefined')
-        throw new Error('当前浏览器不支持解压，请改用 CSV 文件');
+  const result = {};
+  for (const name in entries) {
+    const e = entries[name];
+    const lp = e.localOffset;
+    const lNameLen = view.getUint16(lp + 26, true);
+    const lExtraLen = view.getUint16(lp + 28, true);
+    const dataStart = lp + 30 + lNameLen + lExtraLen;
+    const compData = u8.subarray(dataStart, dataStart + e.compSize);
+
+    if (e.method === 0) {
+      result[name] = compData;
+    } else if (e.method === 8) {
       const ds = new DecompressionStream('deflate-raw');
-      const stream = new Blob([raw]).stream().pipeThrough(ds);
-      return new Uint8Array(await new Response(stream).arrayBuffer());
+      const stream = new Blob([compData]).stream().pipeThrough(ds);
+      const buf = await new Response(stream).arrayBuffer();
+      result[name] = new Uint8Array(buf);
     }
-    throw new Error('不支持的压缩方式：' + entry.method);
   }
+  return result;
+}
 
-  function parseSharedStrings(xml) {
-    const doc = new DOMParser().parseFromString(xml, 'application/xml');
-    const sis = doc.getElementsByTagName('si'), out = [];
-    for (let i = 0; i < sis.length; i++) {
-      const ts = sis[i].getElementsByTagName('t');
-      let s = '';
-      for (let j = 0; j < ts.length; j++) s += ts[j].textContent;
-      out.push(s);
-    }
-    return out;
+function colRefToIndex(ref) {
+  let n = 0;
+  for (let i = 0; i < ref.length; i++) {
+    const c = ref.charCodeAt(i);
+    if (c >= 65 && c <= 90) n = n * 26 + (c - 64);
+    else break;
   }
+  return n - 1;
+}
 
-  function colIndex(ref) {
-    const m = /^([A-Z]+)/.exec(ref || '');
-    if (!m) return -1;
-    let n = 0;
-    for (const ch of m[1]) n = n * 26 + (ch.charCodeAt(0) - 64);
-    return n - 1;
-  }
+async function parseXlsx(arrayBuffer) {
+  const files = await unzip(arrayBuffer);
+  const dec = new TextDecoder('utf-8');
 
-  function parseSheet(xml, shared) {
-    const doc = new DOMParser().parseFromString(xml, 'application/xml');
-    const rows = doc.getElementsByTagName('row'), out = [];
-    for (let i = 0; i < rows.length; i++) {
-      const cells = rows[i].getElementsByTagName('c'), arr = [];
-      let auto = 0;
-      for (let j = 0; j < cells.length; j++) {
-        const c = cells[j];
-        let ci = c.getAttribute('r') ? colIndex(c.getAttribute('r')) : auto;
-        if (ci < 0) ci = auto;
-        auto = ci + 1;
-        const t = c.getAttribute('t');
-        let val = '';
-        if (t === 's') {
-          const v = c.getElementsByTagName('v')[0];
-          if (v) val = shared[parseInt(v.textContent, 10)] || '';
-        } else if (t === 'inlineStr') {
-          const ts = c.getElementsByTagName('t');
-          for (let k = 0; k < ts.length; k++) val += ts[k].textContent;
-        } else {
-          const v = c.getElementsByTagName('v')[0];
-          if (v) val = v.textContent;
+  let sheetPath = 'xl/worksheets/sheet1.xml';
+  try {
+    if (files['xl/workbook.xml'] && files['xl/_rels/workbook.xml.rels']) {
+      const wbDoc = new DOMParser().parseFromString(dec.decode(files['xl/workbook.xml']), 'application/xml');
+      const sheetEl = wbDoc.getElementsByTagNameNS('*', 'sheet')[0];
+      if (sheetEl) {
+        const rid = sheetEl.getAttributeNS(
+          'http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id'
+        ) || sheetEl.getAttribute('r:id');
+        const relsDoc = new DOMParser().parseFromString(dec.decode(files['xl/_rels/workbook.xml.rels']), 'application/xml');
+        const rels = relsDoc.getElementsByTagNameNS('*', 'Relationship');
+        for (let i = 0; i < rels.length; i++) {
+          if (rels[i].getAttribute('Id') === rid) {
+            let target = rels[i].getAttribute('Target') || '';
+            if (target.charAt(0) === '/') target = target.slice(1);
+            else if (target.indexOf('xl/') !== 0) target = 'xl/' + target;
+            target = target.replace(/^\.\//, '');
+            if (files[target]) sheetPath = target;
+            break;
+          }
         }
-        while (arr.length < ci) arr.push('');
-        arr[ci] = val;
       }
-      out.push(arr);
     }
-    return out;
+  } catch (e) { }
+
+  const sheetData = files[sheetPath];
+  if (!sheetData) throw new Error('未能找到工作表数据，请确认文件为有效的 .xlsx');
+
+  const shared = [];
+  if (files['xl/sharedStrings.xml']) {
+    const ssDoc = new DOMParser().parseFromString(dec.decode(files['xl/sharedStrings.xml']), 'application/xml');
+    const sis = ssDoc.getElementsByTagNameNS('*', 'si');
+    for (let i = 0; i < sis.length; i++) {
+      const ts = sis[i].getElementsByTagNameNS('*', 't');
+      let text = '';
+      for (let j = 0; j < ts.length; j++) text += ts[j].textContent;
+      shared.push(text);
+    }
   }
 
-  async function parse(file) {
-    const buffer = await file.arrayBuffer();
-    const u8 = new Uint8Array(buffer);
-    const entries = readZipEntries(buffer);
+  const sheetDoc = new DOMParser().parseFromString(dec.decode(sheetData), 'application/xml');
+  const rowEls = sheetDoc.getElementsByTagNameNS('*', 'row');
+  const rows = [];
 
-    let shared = [];
-    if (entries['xl/sharedStrings.xml']) {
-      const data = await extract(u8, entries['xl/sharedStrings.xml']);
-      shared = parseSharedStrings(new TextDecoder('utf-8').decode(data));
+  for (let i = 0; i < rowEls.length; i++) {
+    const cEls = rowEls[i].getElementsByTagNameNS('*', 'c');
+    const cells = [];
+    for (let j = 0; j < cEls.length; j++) {
+      const cEl = cEls[j];
+      const ref = cEl.getAttribute('r') || '';
+      const colIdx = ref ? colRefToIndex(ref) : j;
+      if (colIdx < 0) continue;
+
+      const t = cEl.getAttribute('t');
+      let val = '';
+
+      if (t === 'inlineStr') {
+        const ts = cEl.getElementsByTagNameNS('*', 't');
+        for (let k = 0; k < ts.length; k++) val += ts[k].textContent;
+      } else {
+        const vEl = cEl.getElementsByTagNameNS('*', 'v')[0];
+        if (vEl) {
+          if (t === 's') {
+            const idx = parseInt(vEl.textContent, 10);
+            val = shared[idx] !== undefined ? shared[idx] : '';
+          } else {
+            val = vEl.textContent;
+          }
+        }
+      }
+      cells[colIdx] = val;
     }
-
-    const sheetNames = Object.keys(entries)
-      .filter(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n))
-      .sort((a, b) => parseInt(a.match(/(\d+)/)[1], 10) - parseInt(b.match(/(\d+)/)[1], 10));
-    if (!sheetNames.length) throw new Error('未找到工作表');
-
-    const data = await extract(u8, entries[sheetNames[0]]);
-    return parseSheet(new TextDecoder('utf-8').decode(data), shared);
+    for (let k = 0; k < cells.length; k++) if (cells[k] === undefined) cells[k] = '';
+    rows.push(cells);
   }
 
-  return { parse };
-})();
+  return rows;
+}
 
-
-/* ============================================================
- * 工具函数
- * ============================================================ */
 function parseCSV(text) {
-  text = text.replace(/^\uFEFF/, '');
   const rows = [];
   let row = [], field = '', inQuotes = false;
   for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
+    const c = text[i];
     if (inQuotes) {
-      if (ch === '"') {
+      if (c === '"') {
         if (text[i + 1] === '"') { field += '"'; i++; }
         else inQuotes = false;
-      } else field += ch;
+      } else field += c;
     } else {
-      if (ch === '"') inQuotes = true;
-      else if (ch === ',') { row.push(field); field = ''; }
-      else if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-      else if (ch !== '\r') field += ch;
+      if (c === '"') inQuotes = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else if (c === '\r') { }
+      else field += c;
     }
   }
   if (field !== '' || row.length) { row.push(field); rows.push(row); }
   return rows;
 }
 
-const CRC_TABLE = (() => {
-  const t = new Uint32Array(256);
-  for (let n = 0; n < 256; n++) {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-    t[n] = c >>> 0;
-  }
-  return t;
-})();
-
-function crc32(buf) {
-  let crc = 0xFFFFFFFF;
-  for (let i = 0; i < buf.length; i++)
-    crc = (crc >>> 8) ^ CRC_TABLE[(crc ^ buf[i]) & 0xFF];
-  return (crc ^ 0xFFFFFFFF) >>> 0;
-}
-
-function makeZip(files) {
-  const enc = new TextEncoder();
-  const parts = [], central = [];
-  let offset = 0;
-
-  for (const f of files) {
-    const nameBytes = enc.encode(f.name);
-    const crc = crc32(f.data), size = f.data.length;
-
-    const local = new Uint8Array(30 + nameBytes.length);
-    const lv = new DataView(local.buffer);
-    lv.setUint32(0, 0x04034b50, true);
-    lv.setUint16(4, 20, true);
-    lv.setUint16(6, 0x0800, true);
-    lv.setUint32(14, crc, true);
-    lv.setUint32(18, size, true);
-    lv.setUint32(22, size, true);
-    lv.setUint16(26, nameBytes.length, true);
-    local.set(nameBytes, 30);
-    parts.push(local, f.data);
-
-    const cd = new Uint8Array(46 + nameBytes.length);
-    const cv = new DataView(cd.buffer);
-    cv.setUint32(0, 0x02014b50, true);
-    cv.setUint16(4, 20, true);
-    cv.setUint16(6, 20, true);
-    cv.setUint16(8, 0x0800, true);
-    cv.setUint32(16, crc, true);
-    cv.setUint32(20, size, true);
-    cv.setUint32(24, size, true);
-    cv.setUint16(28, nameBytes.length, true);
-    cv.setUint32(42, offset, true);
-    cd.set(nameBytes, 46);
-    central.push(cd);
-
-    offset += local.length + size;
-  }
-
-  const cdSize = central.reduce((s, c) => s + c.length, 0);
-  const eocd = new Uint8Array(22);
-  const ev = new DataView(eocd.buffer);
-  ev.setUint32(0, 0x06054b50, true);
-  ev.setUint16(8, files.length, true);
-  ev.setUint16(10, files.length, true);
-  ev.setUint32(12, cdSize, true);
-  ev.setUint32(16, offset, true);
-
-  return new Blob([...parts, ...central, eocd], { type: 'application/zip' });
-}
-
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('show'), 1900);
-}
-
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a);
-  a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
-}
-
-function safeName(str, fallback) {
-  const s = String(str || '').replace(/[\\/:*?"<>|\r\n\t]/g, '_').trim().slice(0, 40);
-  return s || fallback;
-}
-
-function drawQR(canvas, matrix, logicalSize, quiet = 4) {
-  const dpr = Math.min(window.devicePixelRatio || 1, 3);
-  const px = Math.max(64, Math.round(logicalSize * dpr));
-  canvas.width = canvas.height = px;
-  const n = matrix.length, total = n + quiet * 2, unit = px / total;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, px, px);
-  ctx.fillStyle = '#111827';
-  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
-    if (!matrix[r][c]) continue;
-    const x1 = Math.round((c + quiet) * unit);
-    const y1 = Math.round((r + quiet) * unit);
-    const x2 = Math.round((c + quiet + 1) * unit);
-    const y2 = Math.round((r + quiet + 1) * unit);
-    ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
-  }
-}
-
-function colLetterToIndex(s) {
-  s = String(s || '').trim().toUpperCase();
-  if (!/^[A-Z]+$/.test(s)) return -1;
-  let n = 0;
-  for (const ch of s) n = n * 26 + (ch.charCodeAt(0) - 64);
-  return n - 1;
-}
-
-function indexToColLetter(i) {
+function indexToColName(i) {
   let s = '';
-  i += 1;
+  i++;
   while (i > 0) {
-    const m = (i - 1) % 26;
-    s = String.fromCharCode(65 + m) + s;
+    const r = (i - 1) % 26;
+    s = String.fromCharCode(65 + r) + s;
     i = Math.floor((i - 1) / 26);
   }
   return s;
 }
 
-function downloadPNG(canvas, name) {
-  canvas.toBlob(blob => downloadBlob(blob, name + '.png'), 'image/png');
-}
 
+const $ = s => document.querySelector(s);
 
-/* ============================================================
- * 常量与状态
- * ============================================================ */
 const EC_LEVEL = 'Q';
-const EXPORT_SIZE = 512;
-const MAX_ITEMS = 500;
 
-let singleItems = [];
-let batchItems = [];
-let lastRows = null;
-let renderTimer = null;
-let lbItems = [];
-let lbCurrent = -1;
+const MAX_ITEMS = 1000;
 
-const $ = id => document.getElementById(id);
+let currentRows = null;
+let selectedColIdx = 0;
 
-
-/* ============================================================
- * 通用：生成一张二维码卡片
- * 失败时返回"内容过长"卡片，且不加入 items
- * ============================================================ */
-function buildCard(text, name, items) {
-  const card = document.createElement('div');
-  card.className = 'qr-card';
-
-  let matrix;
-  try {
-    matrix = QR.generate(text, EC_LEVEL);
-  } catch {
-    card.innerHTML = '<div class="err">内容过长</div>' +
-      `<div class="txt" title="${text.replace(/"/g, '&quot;')}">${text}</div>`;
-    return card;
-  }
-
-  const cv = document.createElement('canvas');
-  drawQR(cv, matrix, EXPORT_SIZE);
-  card.appendChild(cv);
-
-  const txt = document.createElement('div');
-  txt.className = 'txt';
-  txt.title = text;
-  txt.textContent = text;
-  card.appendChild(txt);
-
-  const btn = document.createElement('button');
-  btn.className = 'btn tiny';
-  btn.textContent = '下载';
-  btn.addEventListener('click', e => {
-    e.stopPropagation();
-    downloadPNG(cv, name);
+function deferHeavyWork(fn) {
+  requestAnimationFrame(() => {
+    setTimeout(fn, 0);
   });
-  card.appendChild(btn);
-
-  const idx = items.length;
-  items.push({ canvas: cv, matrix, text, name });
-  card.title = '双击查看大图';
-  card.addEventListener('dblclick', () => openLightbox(idx, items));
-
-  return card;
 }
 
-
-/* ============================================================
- * 顶部 Tab 切换
- * ============================================================ */
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
-    $('panel-' + tab.dataset.tab).classList.add('active');
+    $('#panel-' + tab.dataset.tab).classList.add('active');
   });
 });
 
+function renderQRSvg(text) {
+  const matrix = QRCore.generate(text, EC_LEVEL);
+  const size = matrix.length;
+  const quiet = 4;
+  const total = size + quiet * 2;
 
-/* ============================================================
- * 单页：多行输入 → 每行一个二维码
- * ============================================================ */
-const singleInput = $('single-input');
-const singleGrid  = $('single-grid');
-const previewBox  = $('preview-box');
-const singleHint  = $('single-hint');
+  let path = '';
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (matrix[r][c]) {
+        path += 'M' + (c + quiet) + ' ' + (r + quiet) + 'h1v1h-1z';
+      }
+    }
+  }
 
-function renderSingle() {
-  const texts = singleInput.value.split('\n').map(l => l.trim()).filter(Boolean);
-  $('char-count').textContent = texts.length;
+  return '<svg viewBox="0 0 ' + total + ' ' + total + '" shape-rendering="crispEdges" ' +
+         'xmlns="http://www.w3.org/2000/svg">' +
+         '<rect width="' + total + '" height="' + total + '" fill="#ffffff"/>' +
+         '<path d="' + path + '" fill="#000000"/></svg>';
+}
 
-  if (!texts.length) {
-    previewBox.hidden = false;
-    singleGrid.hidden = true;
-    singleGrid.innerHTML = '';
-    singleItems = [];
-    singleHint.textContent = '';
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function getEls(target) {
+  if (target === 'manual') {
+    return {
+      grid: document.getElementById('manualGrid'),
+      empty: document.getElementById('manualEmpty'),
+      badge: document.getElementById('manualBadge')
+    };
+  }
+  return {
+    grid: document.getElementById('excelGrid'),
+    empty: document.getElementById('excelEmpty'),
+    badge: document.getElementById('excelBadge')
+  };
+}
+
+function showEmptyState(target) {
+  const el = getEls(target);
+  el.grid.innerHTML = '';
+  el.empty.classList.remove('hidden');
+  el.badge.classList.add('hidden');
+}
+
+function renderResults(items, target) {
+  const el = getEls(target);
+
+  if (!items.length) { showEmptyState(target); return; }
+
+  if (items.length > MAX_ITEMS) {
+    alert('内容较多，本次仅生成前 ' + MAX_ITEMS + ' 条（共 ' + items.length + ' 条）。');
+    items = items.slice(0, MAX_ITEMS);
+  }
+
+  el.grid.innerHTML = '';
+  el.empty.classList.add('hidden');
+
+  const frag = document.createDocumentFragment();
+  const errors = [];
+
+  items.forEach((text, i) => {
+    try {
+      const div = document.createElement('div');
+      div.className = 'qr-card';
+      div.style.animationDelay = Math.min(i * 12, 380) + 'ms';
+      div.innerHTML = renderQRSvg(text) +
+        '<div class="qr-label" title="' + escapeHtml(text) + '">' + escapeHtml(text) + '</div>';
+      frag.appendChild(div);
+    } catch (err) {
+      errors.push('第 ' + (i + 1) + ' 条：' + err.message);
+    }
+  });
+
+  el.grid.appendChild(frag);
+
+  const okCount = items.length - errors.length;
+  if (okCount > 0) {
+    el.badge.textContent = okCount;
+    el.badge.classList.remove('hidden');
+  } else {
+    el.badge.classList.add('hidden');
+  }
+
+  if (errors.length) {
+    alert('部分内容未能生成：\n' + errors.slice(0, 8).join('\n') +
+          (errors.length > 8 ? '\n... 共 ' + errors.length + ' 条' : ''));
+  }
+}
+
+let manualTimer = null;
+
+function generateManual() {
+  const raw = $('#manualInput').value;
+  const items = raw.split(/\r?\n/).map(s => s.trim()).filter(s => s !== '');
+  renderResults(items, 'manual');
+}
+
+$('#manualInput').addEventListener('input', () => {
+  clearTimeout(manualTimer);
+  manualTimer = setTimeout(generateManual, 500);
+});
+
+function getMaxCols(rows) {
+  let max = 0;
+  rows.forEach(r => { if (r.length > max) max = r.length; });
+  return max;
+}
+
+function buildColumnOptions() {
+  const colSelect = $('#colSelect');
+
+  if (!currentRows) {
+    colSelect.innerHTML = '';
+    const o = document.createElement('option');
+    o.value = '';
+    o.textContent = '请先导入表格';
+    colSelect.appendChild(o);
+    colSelect.disabled = true;
     return;
   }
 
-  previewBox.hidden = true;
-  singleGrid.hidden = false;
-  singleGrid.innerHTML = '';
-  singleItems = [];
+  const hasHeader = $('#skipHeader').checked;
+  const headerRow = currentRows[0] || [];
+  const maxCols = getMaxCols(currentRows);
 
-  texts.forEach(text => {
-    const name = safeName(text, 'qrcode_' + (singleItems.length + 1));
-    singleGrid.appendChild(buildCard(text, name, singleItems));
-  });
+  colSelect.disabled = false;
+  colSelect.innerHTML = '';
 
-  singleHint.textContent = `共 ${texts.length} 个二维码`;
-}
+  for (let i = 0; i < maxCols; i++) {
+    const o = document.createElement('option');
+    o.value = String(i);
 
-singleInput.addEventListener('input', () => {
-  clearTimeout(renderTimer);
-  renderTimer = setTimeout(renderSingle, 120);
-});
+    let label;
+    if (hasHeader) {
+      const h = String(headerRow[i] === undefined ? '' : headerRow[i]).trim();
+      label = h !== '' ? h : ('第 ' + indexToColName(i) + ' 列');
+    } else {
+      label = '第 ' + indexToColName(i) + ' 列';
+    }
+    o.textContent = label;
+    o.title = label;
+    colSelect.appendChild(o);
+  }
 
-
-/* ============================================================
- * 批量：解析 Excel / CSV
- * ============================================================ */
-const dropZone     = $('drop-zone');
-const fileInput    = $('file-input');
-const qrGrid       = $('qr-grid');
-const batchResult  = $('batch-result');
-const batchCount   = $('batch-count');
-const batchStatus  = $('batch-status');
-const hasHeaderEl  = $('has-header');
-const contentColEl = $('content-col');
-
-hasHeaderEl.addEventListener('change', rebuildFromRows);
-contentColEl.addEventListener('change', rebuildFromRows);
-contentColEl.addEventListener('input', () => {
-  const v = contentColEl.value.toUpperCase();
-  if (v !== contentColEl.value) contentColEl.value = v;
-});
-
-function rebuildFromRows() {
-  if (!lastRows) return;
-  try {
-    buildBatch(lastRows);
-  } catch (err) {
-    closeLightbox();
-    qrGrid.innerHTML = '';
-    batchItems = [];
-    batchResult.hidden = true;
-    toast(err.message || '无法生成，请检查数据');
+  if (selectedColIdx >= 0 && selectedColIdx < maxCols) {
+    colSelect.value = String(selectedColIdx);
+  } else {
+    selectedColIdx = 0;
+    colSelect.value = '0';
   }
 }
 
-dropZone.addEventListener('click', () => fileInput.click());
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
-dropZone.addEventListener('drop', e => {
+function generateExcel() {
+  if (!currentRows) return;
+
+  const skip = $('#skipHeader').checked;
+  const colIdx = selectedColIdx;
+
+  const dataRows = skip ? currentRows.slice(1) : currentRows;
+  const items = dataRows
+    .map(r => String(r[colIdx] === undefined ? '' : r[colIdx]).trim())
+    .filter(t => t !== '');
+
+  renderResults(items, 'excel');
+}
+
+const uploadArea = $('#uploadArea');
+const fileInput = $('#excelFile');
+
+uploadArea.addEventListener('click', () => fileInput.click());
+
+uploadArea.addEventListener('dragover', e => {
   e.preventDefault();
-  dropZone.classList.remove('drag');
-  const file = e.dataTransfer.files[0];
-  if (file) handleFile(file);
+  uploadArea.classList.add('dragover');
+});
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
 });
 
-fileInput.addEventListener('change', () => {
-  const file = fileInput.files[0];
-  if (file) handleFile(file);
-  fileInput.value = '';
+fileInput.addEventListener('change', e => {
+  if (e.target.files.length) handleFile(e.target.files[0]);
 });
+
+function showInfo(text, isError) {
+  const info = $('#excelInfo');
+  const infoText = $('#excelInfoText');
+  info.classList.remove('hidden');
+  info.classList.toggle('err', !!isError);
+  infoText.textContent = text;
+}
+
+function hideInfo() {
+  const info = $('#excelInfo');
+  info.classList.add('hidden');
+  info.classList.remove('err');
+  $('#excelInfoText').textContent = '';
+}
 
 async function handleFile(file) {
-  const name = file.name.toLowerCase();
-  batchStatus.textContent = '解析中…';
+  showInfo('正在读取文件...', false);
+
   try {
     let rows;
-    if (name.endsWith('.csv')) rows = parseCSV(await file.text());
-    else if (name.endsWith('.xlsx') || name.endsWith('.xls')) rows = await MiniXLSX.parse(file);
-    else throw new Error('不支持的文件格式，请使用 .xlsx / .xls / .csv');
+    const name = file.name.toLowerCase();
 
-    rows = rows.filter(r => r && r.some(v => String(v ?? '').trim() !== ''));
-    if (!rows.length) throw new Error('文件中没有可用的数据');
-
-    lastRows = rows;
-    const maxCols = Math.max(1, ...rows.map(r => r.length));
-    buildBatch(rows);
-    batchStatus.textContent =
-      `已解析 ${file.name} · 共 ${maxCols} 列（${indexToColLetter(0)}~${indexToColLetter(maxCols - 1)}）`;
-  } catch (err) {
-    console.error(err);
-    batchStatus.textContent = '';
-    toast(err.message || '解析失败');
-  }
-}
-
-function buildBatch(rows) {
-  closeLightbox();
-
-  const contentCol = colLetterToIndex(contentColEl.value);
-  if (contentCol < 0) throw new Error('内容列填写有误，请输入列字母（如 A、B、C）');
-
-  const hasHeader = hasHeaderEl.checked;
-  if (hasHeader && rows.length < 2)
-    throw new Error('数据不足：勾选了“首行为标题”，需从第 2 行开始提供数据');
-
-  const dataRows = hasHeader ? rows.slice(1) : rows;
-  const limit = Math.min(dataRows.length, MAX_ITEMS);
-
-  const valid = [];
-  for (let i = 0; i < limit; i++) {
-    const text = String((dataRows[i] || [])[contentCol] ?? '').trim();
-    if (text) valid.push(text);
-  }
-  if (!valid.length) throw new Error('没有可生成的内容，请检查数据');
-
-  qrGrid.innerHTML = '';
-  batchItems = [];
-
-  const padLen = Math.max(3, String(valid.length).length);
-  valid.forEach((text, i) => {
-    const fname = String(i + 1).padStart(padLen, '0');
-    qrGrid.appendChild(buildCard(text, fname, batchItems));
-  });
-
-  batchCount.textContent = `(${batchItems.length} 个)`;
-  batchResult.hidden = false;
-
-  if (dataRows.length > MAX_ITEMS)
-    toast(`数据超过 ${MAX_ITEMS} 条，仅生成前 ${MAX_ITEMS} 条`);
-}
-
-$('download-all').addEventListener('click', async () => {
-  if (!batchItems.length) return;
-  const btn = $('download-all');
-  btn.disabled = true;
-  btn.textContent = '打包中…';
-  try {
-    const files = [], used = new Set();
-    for (const it of batchItems) {
-      const blob = await new Promise(r => it.canvas.toBlob(r, 'image/png'));
-      const data = new Uint8Array(await blob.arrayBuffer());
-      let fname = it.name, n = 2;
-      while (used.has(fname)) fname = it.name + '_' + (n++);
-      used.add(fname);
-      files.push({ name: fname + '.png', data });
+    if (name.endsWith('.csv')) {
+      rows = parseCSV(await file.text());
+    } else if (name.endsWith('.xlsx')) {
+      rows = await parseXlsx(await file.arrayBuffer());
+    } else {
+      throw new Error('不支持的文件格式，请选择 .xlsx 或 .csv 文件');
     }
-    downloadBlob(makeZip(files), 'qrcodes_' + Date.now() + '.zip');
-    toast(`已打包 ${files.length} 个二维码`);
-  } catch (e) {
-    console.error(e);
-    toast('打包失败：' + e.message);
+
+    rows = rows.filter(r => r.some(c => String(c).trim() !== ''));
+    if (!rows.length) throw new Error('文件中没有读取到任何数据');
+
+    currentRows = rows;
+
+    buildColumnOptions();
+
+    showInfo('已读取「' + file.name + '」', false);
+
+    generateExcel();
+  } catch (err) {
+    currentRows = null;
+    selectedColIdx = 0;
+    buildColumnOptions();
+    showInfo('✗ ' + err.message, true);
+    showEmptyState('excel');
   } finally {
-    btn.disabled = false;
-    btn.textContent = '打包下载 ZIP';
+    fileInput.value = '';
   }
-});
-
-$('clear-batch').addEventListener('click', () => {
-  closeLightbox();
-  qrGrid.innerHTML = '';
-  batchItems = [];
-  batchResult.hidden = true;
-  batchStatus.textContent = '';
-  lastRows = null;
-  contentColEl.value = 'A';
-});
-
-$('download-template').addEventListener('click', () => {
-  const csv = '\uFEFF内容\nhttps://www.example.com\nHello World\n13800138000\n';
-  downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), '二维码批量导入模板.csv');
-  toast('模板已下载，可用 Excel 打开填写');
-});
-
-
-/* ============================================================
- * 大图预览弹层
- * ============================================================ */
-const lightbox = $('lightbox');
-
-function openLightbox(idx, items) {
-  lbItems = items || batchItems;
-  if (idx < 0 || idx >= lbItems.length) return;
-  lightbox.hidden = false;
-  renderLightbox(idx);
 }
 
-function closeLightbox() {
-  lightbox.hidden = true;
-  lbCurrent = -1;
-  lbItems = [];
-}
-
-function renderLightbox(idx) {
-  const total = lbItems.length;
-  if (!total) return closeLightbox();
-  lbCurrent = ((idx % total) + total) % total;
-  const it = lbItems[lbCurrent];
-
-  drawQR($('lb-canvas'), it.matrix, 480);
-  $('lb-text').textContent = it.text;
-  $('lb-text').title = it.text;
-  $('lb-index').textContent = (lbCurrent + 1) + ' / ' + total;
-
-  const multiple = total > 1;
-  $('lb-prev').hidden = !multiple;
-  $('lb-next').hidden = !multiple;
-}
-
-function stepLightbox(delta) {
-  if (lbCurrent >= 0) renderLightbox(lbCurrent + delta);
-}
-
-$('lb-prev').addEventListener('click', () => stepLightbox(-1));
-$('lb-next').addEventListener('click', () => stepLightbox(1));
-$('lb-close').addEventListener('click', closeLightbox);
-$('lb-backdrop').addEventListener('click', closeLightbox);
-
-$('lb-download').addEventListener('click', () => {
-  if (lbCurrent < 0) return;
-  const it = lbItems[lbCurrent];
-  const tmp = document.createElement('canvas');
-  drawQR(tmp, it.matrix, 900);
-  downloadPNG(tmp, it.name);
-  toast('已下载 PNG');
+$('#clearFileBtn').addEventListener('click', () => {
+  currentRows = null;
+  selectedColIdx = 0;
+  buildColumnOptions();
+  hideInfo();
+  showEmptyState('excel');
 });
 
-document.addEventListener('keydown', e => {
-  if (lightbox.hidden) return;
-  if (e.key === 'Escape') closeLightbox();
-  else if (e.key === 'ArrowLeft') { e.preventDefault(); stepLightbox(-1); }
-  else if (e.key === 'ArrowRight') { e.preventDefault(); stepLightbox(1); }
+$('#skipHeader').addEventListener('change', () => {
+  deferHeavyWork(() => {
+    buildColumnOptions();
+    generateExcel();
+  });
 });
 
-(() => {
-  let startX = 0, startY = 0, tracking = false;
-  lightbox.addEventListener('touchstart', e => {
-    if (e.touches.length !== 1) return;
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    tracking = true;
-  }, { passive: true });
-  lightbox.addEventListener('touchend', e => {
-    if (!tracking) return;
-    tracking = false;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - startX, dy = t.clientY - startY;
-    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy))
-      stepLightbox(dx < 0 ? 1 : -1);
-  }, { passive: true });
-})();
+$('#colSelect').addEventListener('change', () => {
+  const v = parseInt($('#colSelect').value, 10);
+  if (!isNaN(v)) selectedColIdx = v;
+  deferHeavyWork(generateExcel);
+});
 
-
-/* 初始化 */
-renderSingle();
+buildColumnOptions();
 </script>
 </body>
 </html>
